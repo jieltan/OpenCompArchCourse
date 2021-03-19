@@ -3,7 +3,7 @@
 This is the repository associated with our SIGCSE '21 paper "RISC-V Reward: Building Out-of-Order Processors in a Computer Architecture Design Course with an Open-Source ISA". 
 
 * What's in the repo: 
-	* the paper (Creative Commons, woohoo!) 
+	* the paper and slides (Creative Commons, woohoo!) 
 	* current (as of 2021) project and lab assignments in PDF and LaTeX
 	* a pointer to the repo containing the in-order RISC-V CPU developed for the course
 	* link to the current course web page 
