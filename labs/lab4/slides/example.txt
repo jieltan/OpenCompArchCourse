@@ -1,0 +1,23 @@
+[wcunning@dahak ~] $ git clone git@bitbucket.org:eecs470staff/course_material.git
+Cloning into 'course_material'...
+Warning: Permanently added the RSA host key for IP address '131.103.20.168' to the list of known hosts.
+remote: Counting objects: 183, done.
+remote: Compressing objects: 100% (166/166), done.
+remote: Total 183 (delta 39), reused 0 (delta 0)
+Receiving objects: 100% (183/183), 141.58 KiB | 0 bytes/s, done.
+Resolving deltas: 100% (39/39), done.
+Checking connectivity... done
+[wcunning@dahak Documents] $ cd course_material/
+[wcunning@dahak project1] [master] $ vim projects/project1/testD.v 
+[wcunning@dahak project1] [master *] $ git add projects/project1/testD.v
+[wcunning@dahak project1] [master +] $ git commit
+[master 4caae96] Updated Project 1 to use @(posedge clock);
+ 1 file changed, 11 insertions(+), 11 deletions(-)
+[wcunning@dahak project1] [master] $ git push
+Counting objects: 10, done.
+Delta compression using up to 4 threads.
+Compressing objects: 100% (5/5), done.
+Writing objects: 100% (5/5), 544 bytes | 0 bytes/s, done.
+Total 5 (delta 3), reused 0 (delta 0)
+To git@bitbucket.org:eecs470staff/course_material.git
+   da0cf7a..4caae96  master -> master

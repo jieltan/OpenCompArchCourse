@@ -1,0 +1,21 @@
+[wcunning@dahak ~] $ ssh-keygen -t rsa -b 4096
+Generating public/private rsa key pair.
+Enter file in which to save the key (/home/wcunning/.ssh/id_rsa): 
+Enter passphrase (empty for no passphrase): 
+Enter same passphrase again: 
+Your identification has been saved in /home/wcunning/.ssh/id_rsa.
+Your public key has been saved in /home/wcunning/.ssh/id_rsa.pub.
+The key fingerprint is:
+3f:91:f9:7f:d7:be:4e:62:56:27:88:1d:3a:5d:b4:56 wcunning@dahak
+The key's randomart image is:
++--[ RSA 4096]----+
+|              . E|
+|             . o |
+|            . +  |
+|           B =   |
+|        S B + ...|
+|         . +  ...|
+|          o .+ ..|
+|           .o.o +|
+|              o=+|
++-----------------+

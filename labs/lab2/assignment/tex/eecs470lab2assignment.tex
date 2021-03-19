@@ -1,0 +1,184 @@
+%***********************************************%
+%												%
+% EECS 470 - Lab 02								%
+%<------------------> 							%
+% Last Modified by:								%
+%	William Cunningham on 2014-9-11				%
+%												%
+%***********************************************%
+
+%***********************************************%
+% Preamble										%
+%***********************************************%
+
+\documentclass{article}
+
+\usepackage{
+	tikz,
+	xcolor,
+	colortbl,
+	graphicx,
+	amsmath,
+	amssymb,
+	hyperref,
+	mathrsfs,
+	float,
+	siunitx,
+	fancyhdr,
+	url,
+	minted,
+	cleveref
+}
+
+\usepackage
+	[left=1in,top=1in,right=1in,bottom=1in]
+	{geometry}
+
+\pagestyle{fancy}
+\raggedright
+
+%--- Header ---%
+
+\newcommand{\courseNumber}{EECS 470}
+\newcommand{\courseTitle}{Computer Architecture}
+\newcommand{\university}{University of Michigan, Ann Arbor}
+\newcommand{\labdate}{January 28$^\text{th}$/29$^\text{th}$, 2021}
+
+
+\lhead{
+	\small{
+		\university
+	}
+}
+\rhead{
+	\small{
+		\emph{Date: \labdate} \hspace*{-1em}
+		% Why is the above \hspace necessary?
+	}
+}
+
+\newcommand{\shortbar}{
+	\vspace*{-12pt}
+	\begin{center}
+		\rule{5ex}{0.1pt}
+	\end{center}
+}
+\newcommand{\lab}[1]{
+	\begin{center}
+		\LARGE{
+			\vspace*{-32pt}
+			EECS 470 Lab #1 Assignment
+			\shortbar
+			\vspace*{-20pt}
+		}
+	\end{center}
+}
+
+
+%***********************************************%
+%                                               %
+% TikZ Definitions                              %
+%                                               %
+%***********************************************%
+
+\usetikzlibrary{shapes,arrows}
+
+% Block Diagram Styles
+\tikzstyle{block} = [draw, fill=blue!20, rectangle,
+        minimum height=3em, minimum width=6em]
+\tikzstyle{sum} = [draw, fill=blue!20, circle, node distance=2cm]
+\tikzstyle{input} = [coordinate]
+\tikzstyle{output} = [coordinate]
+\tikzstyle{branch} = [coordinate]
+\tikzstyle{pinstyle} = [pin edge={to-, thin, black}]
+
+% Signal Flow Graph Styles
+\tikzstyle{signal} = [draw, fill=blue!20, circle,
+	minimum height=3em]
+\tikzstyle{state} = [draw, fill=blue!20, circle,
+	minimum height=3em]
+
+%***********************************************%
+%                                               %
+% Document										%
+%                                               %
+%***********************************************%
+
+\begin{document}
+\lab{2}
+
+\section*{Note:}
+\begin{itemize}
+	\item The lab should be completed individually.
+	\item The lab must checked off by a GSI before the end of next week Friday's lab.\end{itemize}
+
+\section{Assignment}
+\subsection{Writing a Robust Testbench}
+Some modules are simple enough that you can write a testbench with complete
+coverage. Often times, you will have to strike a balance between a thorough
+testbench and the amount of time required to generate the testbench, or for the
+testbench to run. We have supplied you with a slightly obfuscated full-adder 
+(\texttt{fa1.v}) and a stub testbench (\texttt{fa1\_test.v}). You need to write
+\texttt{fa1\_test.v} such that it achieves complete coverage of the full-adder 
+module. Once you have done this, it should be a quick fix to identify and fix 
+the bug in \texttt{fa1.v}.
+
+\emph{Note:} to compile this lab, we need a Makefile, but we weren't provided with
+one. Think about what you learned today in lab. Write your own Makefile (or 
+modify the one provided in Lab 1). We'll also need a TCL script since that 
+wasn’t provided either.
+
+\subsection{Using Arrays of Modules}
+Using the 1-bit adder from Part A, build a 64-bit adder as shown in the
+presentation. The included file named \texttt{fa64.v} contains a module stub 
+\texttt{full\_adder\_64bit}. Make the module into a complete 64 bit adder. (This
+should take no more than 5 minutes, but if it does, please ask around for help 
+and discuss with your neighbors.)
+
+\subsection{Writing a Harder Testbench}
+\label{sec:hard-testbench}
+We have provided you with a slightly more complete \texttt{fa64\_test.v}. As a 
+first step, read through the code we provided and make sure you understand it. You will need a
+lot of this material for Lab 3.
+
+Try running the testbench. What's happening? Why? Read the testbench and
+understand what it's doing.
+
+\emph{Hint:} Use \texttt{Ctrl-}$\mathtt{\backslash}$ to kill an unresponsive simulation.
+
+
+Since our testbench won't work as written, what kind of tests could you add to
+achieve good, but imperfect coverage? Modify \texttt{fa64\_test.v} to be a 
+useful testbench and make sure your \texttt{fa64.v} implementation passes. 
+Specifically, you need to add some specialized test cases. What specific test 
+cases are useful and/or a good idea to validate your adder? Be prepared to 
+defend your choices. Our \texttt{compare\_correct\_sum} task is incomplete. You
+need to identify what it's missing and fix it.
+
+\subsection{Synthesizing Your Design}
+Synthesize your 64 bit adder. Ensure that your testbench from
+\cref{sec:hard-testbench} also 
+passes successfully on the synthesized version. This is the first time we've 
+synthesized a project with multiple source files so we'll need to make a few 
+changes:
+
+\begin{itemize}
+	\item In the TCL script: (1) \texttt{read\_file -f sverilog [list ``fa1.v''
+		``fa64.v'']}
+		
+	and (2) \texttt{set CLK\_PERIOD 1}
+
+	\item In the Makefile, the rule to make the \texttt{.vg} file needs to
+		depend on all of the design files.
+	\item The generated \texttt{.vg} file will match the design name set in the
+		TCL script. This name must be the top level module in the design, in our
+		case this is \texttt{full\_adder\_64bit}.
+\end{itemize}
+
+Once you have successfully run synthesis, look at the .rep file. Search for the
+word ``slack''. It's been violated! What does this mean? How do you fix this 
+problem?
+
+\section{Submission}
+Once you are confident in your module and testbench, go to office hours, place yourself on the \href{https://oh.eecs.umich.edu/courses/eecs470}{\underline{help queue}} and a GSI will check you off.
+\end{document}

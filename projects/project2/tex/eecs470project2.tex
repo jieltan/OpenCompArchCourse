@@ -1,0 +1,314 @@
+%***********************************************%
+%												%
+% EECS 470 - Project 2							%
+%<------------------> 							%
+% Last Modified by:								%
+%	William Cunningham on 2014-9-14				%
+%												%
+%***********************************************%
+
+%***********************************************%
+% Preamble										%
+%***********************************************%
+
+\documentclass{article}
+
+\usepackage[dvipsnames]{xcolor}
+
+\usepackage{
+	tikz,
+	colortbl,
+	graphicx,
+	amsmath,
+	amssymb,
+	mathrsfs,
+	float,
+	siunitx,
+	fancyhdr,
+	url,
+	minted,
+	cleveref,
+	algorithm,
+	algpseudocode
+}
+
+
+\usepackage
+	[left=1in,top=1in,right=1in,bottom=1in]
+	{geometry}
+
+\pagestyle{fancy}
+
+%--- Header ---%
+
+\newcommand{\courseNumber}{EECS 470}
+\newcommand{\courseTitle}{Computer Architecture}
+\newcommand{\university}{University of Michigan, Ann Arbor}
+\newcommand{\labdate}{January 30$^{\text{th}}$, 2021}
+
+
+\lhead{
+	\small{
+		\university
+	}
+}
+\rhead{
+	\small{
+		\emph{Date: \labdate} \hspace*{-1em}
+		% Why is the above \hspace necessary?
+	}
+}
+
+\newcommand{\shortbar}{
+	\vspace*{-12pt}
+	\begin{center}
+		\rule{5ex}{0.1pt}
+	\end{center}
+}
+\newcommand{\project}[1]{
+	\begin{center}
+		\LARGE{
+			\vspace*{-12pt}
+			EECS 470 Project \##1
+			\shortbar
+		}
+	\end{center}
+}
+
+
+%***********************************************%
+%                                               %
+% TikZ Definitions                              %
+%                                               %
+%***********************************************%
+
+\usetikzlibrary{shapes,arrows,automata,shadows}
+\pgfdeclarelayer{background}
+\pgfdeclarelayer{foreground}
+\pgfsetlayers{background,main,foreground}
+
+% Block Diagram Styles
+\tikzstyle{block} = [draw, fill=RoyalBlue!50, rectangle,
+        minimum height=2cm, minimum width=2cm, rounded corners]
+\tikzstyle{sum} = [draw, fill=blue!20, circle, node distance=2cm]
+\tikzstyle{input} = [coordinate]
+\tikzstyle{output} = [coordinate]
+\tikzstyle{branch} = [coordinate]
+\tikzstyle{pinstyle} = [pin edge={to-, thin, black}]
+
+% Signal Flow Graph Styles
+\tikzstyle{signal} = [draw, fill=RoyalBlue!50, circle,
+	minimum height=3em]
+\tikzstyle{state} = [draw, fill=RoyalBlue!50, circle,
+	minimum height=3em]
+
+%***********************************************%
+%                                               %
+% Document										%
+%                                               %
+%***********************************************%
+
+\begin{document}
+\vspace*{-20pt}
+\project{2}
+
+\begin{itemize}
+	\item This is an individual assignment. You may discuss the specification
+		and help one another with the (System)Verilog language. Your solution,
+		particularly the designs you submit, must be your own.
+	\item Due at 11:59pm ET on 10$^{\text{th}}$ February, 2021.
+		\emph{Late submissions are not accepted.}
+\end{itemize}
+\hrulefill
+
+\section{Introduction}
+We've mentioned synthesis several times already in the lab and lecture.
+Synthesis is an exponentially complex process, and so it can take a very long
+time on larger projects, like the one you'll be doing at the end of the
+semester. To mitigate this, we can synthesize submodules and then include them
+as black boxes in the final project, which simplifies the synthesis problem.
+This is particularly useful for synthesizing the caches in your final project,
+which can reduce the synthesis time by half or more. 
+
+We will use a pipelined multiplier as an example of this process. This
+multiplier is actually the one you'll be using in your final project, so you 
+should use this as a chance to get very familiar with it. 
+
+Finally, we will be using this multiplier as part of a finite state machine
+design problem, which is intended to give you additional practice writing
+Verilog in reasonable style. The style we recommend for finite state machine
+design will be presented in the lab.
+
+\section{Hierarchical Synthesis}
+\subsection{Concept}
+Synthesis takes a behavioral level design and turns it into a structural level
+design. Specifically, the synthesis tool replaces larger operations, i.e.
+multiplication or addition with standard designs for modules, and attempts to
+build larger logic components out of a set of standard cells (our standard cells
+are in the \texttt{lec25dscc25.v} file included by your \texttt{Makefile}).
+Doing this optimally is an NP-hard problem, so it is often impossible in 
+practice. In this class, it is generally merely very time consuming, meaning 
+that your final project will take anywhere between six hours and one day to 
+synthesize. 
+
+To mitigate this problem, we can synthesize large submodules in a design
+individually and then include these syntheses as black boxes in the final design
+synthesis. Given that the original problem was NP-hard, we know that it would
+have been exponentially complex, where the quantity of interest is the size of a
+design, measured in something like the number of logic elements (standard cells,
+LUTs, transistors, etc.) That means that simplifying to only somewhat fewer
+elements still shortens the time to find a solution significantly.
+
+\subsection{Pipelined Multiplier}
+We have provided you with a pipelined multiplier, found in 
+\texttt{pipe\_mult.v}, to which we will apply this concept. The multiplier does 
+multiplication in stages, somewhat like you would have learned to carry out 
+multiplication in elementary school. It multiplies the first 8 bits of the
+multiplier with the whole multiplicand in one clock cycle, then the next 8 bits
+of the multiplier against a shifted multiplicand, and so on to get 8 partial
+products. Summing those gives us the desired multiplication. This means that 
+each multiplication will take 8 clock cycles. Each partial product is created by
+a separate multiplier stage, which can be found in the  \texttt{mult\_stage.v} 
+file. 
+
+Your first assignment will be to find a reasonable clock period (within
+2\si{\nano\second} of the lowest possible) at which the 8 stage multiplier we've
+provided you can be synthesized with slack met. For example, if you find that
+the design does not synthesize at a clock period of 4 \si{\nano\second}, but it 
+does synthesize with a clock period of 5.5 \si{\nano\second}, then 5.5 
+\si{\nano\second} must be within 1.5 \si{\nano\second} of the shortest possible 
+clock period. We've already setup the \texttt{.tcl} scripts to synthesize the 
+two modules in this design for you. Note the  \texttt{set\_dont\_touch} command 
+in the \texttt{mult.tcl} script. This command tells the synthesis tool to treat 
+the module as a black box and to not optimize it further. 
+
+To find the clock period, you will need to change the clock period in the
+\texttt{mult\_stage.tcl} file until you reach the best clock period that meets
+all slack. Once you've found that, the total clock period of the multiplier will
+be that stage clock period plus the additional combinational delay from the
+interconnects in the higher level \texttt{mult} module. This means that the
+clock period in the \texttt{mult\_stage.tcl} file will be different from the one
+found in the \texttt{mult.tcl} file.
+
+Your second assignment is to modify the pipelined multiplier we've provided to
+work as both a 4 stage multiplier and as a 2 stage multiplier. You can either
+do this by copying the files and having separate 2, 4 and 8 stage multipliers or
+by figuring out a combination of preprocessor macros or parameters that set
+pipeline depth. Whichever method you choose is fine for this project, but having
+the parameterized pipeline depth will be extremely helpful for the final
+project. Once you have the other two multipliers, you will need to find the best
+clock periods that they can each achieve. How do all three clock periods
+compare? Does this conform to your expectations?
+
+\section{Integer Square Root} 
+\label{sec:isr}
+Now, you will need to create a module that uses the multiplier that we supplied,
+the 8 stage multiplier. You will be writing a module to compute the integer
+square root of a 64-bit number. It will generate a 32-bit number that is the
+largest integer that is not larger than the square root of the number provided.
+For example, the integer square root of 24 is 4.
+
+The module declaration is as follows:
+\begin{figure}[H]
+	\begin{minted}[frame=lines,tabsize=4]{verilog}
+module ISR(
+	input   				reset,
+	input   		[63:0]  value,
+	input   				clock,
+	output logic    [31:0]  result,
+	output logic            done
+);
+	\end{minted}
+\end{figure}
+It should operate as follows:
+\begin{itemize}
+	\item If \texttt{reset} is asserted during a rising clock edge (synchronous
+		reset), the \texttt{value} signal is to be stored.
+	\item If \texttt{reset} is asserted part way through a computation, the
+		result of that computation is discarded and a new \texttt{value} is
+		latched into the module.
+	\item When the module has finished computing the answer, the output is
+		placed on the \texttt{result} line and \texttt{done} line is raised on the same cycle.
+	\item It must not take more than 600 clock cycles to compute a result (from
+		the last clock that \texttt{reset} is asserted to the first clock that
+		\texttt{done} is asserted.)
+\end{itemize}
+
+We do not suggest that you pipeline this module. You will likely need to
+perform something like a binary search to find the result a simple algorithm is
+as follows:
+\begin{algorithm}[H]
+	\caption{Integer Square Root}
+	\begin{algorithmic}[1]
+		\Procedure{ISR}{\texttt{value}}
+		\For{$i \gets 31 \text{ to } 0$}
+			\State \texttt{proposed\_solution[$i$]}$\leftarrow$1
+			\If{\texttt{proposed\_solution}$^{2} >$ \texttt{value}}
+			\State \texttt{proposed\_solution[$i$]}$\leftarrow$0
+			\EndIf
+		\EndFor
+		\EndProcedure
+	\end{algorithmic}
+\end{algorithm}
+
+Note that loops do not have a direct hardware equivalent. What hardware design
+technique lets us implement a procedure like this?
+
+In addition to writing this module, you will need to write a testbench for it.
+This testbench should probably test specific corner cases, random testing and
+the short loops. Your testbench should print either \texttt{@@@Passed} or
+\texttt{@@@Failed}. 
+
+Once you have the module written and tested, synthesize it. This will probably 
+take several minutes at least.
+
+\section{Comprehension Questions}
+
+Answer the following questions, and submit the answers in a plaintext file called
+\texttt{answers.txt} along with the rest of your project.
+
+\begin{enumerate}
+	\item Consider the multiplier supplied with this project.
+		\begin{enumerate}
+			\item What is the cycle time achieved when you synthesized our 
+				multiplier? 
+			\item What does this mean the total latency is for a multiplication?
+		\end{enumerate}
+	\item Answer question 1 (parts a and b) for the two multipliers you created.
+	\item Consider the relative values of the answers you found to questions 1
+		and 2. Do these seem reasonable? Why or why not?
+	\item What is the clock period achievable with the module you wrote in
+		\cref{sec:isr}?
+	\item How long would it take for your module to compute the square root of 
+		1001 given the cycle time of question 4? Would you expect a performance 
+		gain or penalty if you used your 2 stage multiplier?
+\end{enumerate}
+
+\section{Submission}
+After you are confident in your solution, make sure you have the following files
+in your directory
+\begin{enumerate}
+	\item \texttt{ISR.v}
+	\item \texttt{test\_ISR.v}
+	\item \texttt{answers.txt}
+\end{enumerate}
+Now, go up one directory (\texttt{cd ..}) and run:
+
+\texttt{/afs/umich.edu/user/j/b/jbbeau/Public/470submit -p2 <directory>}
+
+\noindent
+Note that the script takes a directory name as an argument, not an absolute
+path, so you must run it from one level above your project 1 directory. 
+
+At this point, you should see something similar to: 
+\inputminted[frame=lines,obeytabs,tabsize=4]{bash}{submission.txt}
+\noindent
+If there is a problem, it will be printed to the screen. Shortly after
+submission you should receive an email telling you if your submission passed the
+basic tests. This is not an autograder, so it's simply telling you that your
+design built successfully on the grading machine and that the module
+declarations looked approximately correct. If your submission didn't pass, copy
+the error message into an email to the course staff, and we will attempt to
+help.
+
+\end{document}

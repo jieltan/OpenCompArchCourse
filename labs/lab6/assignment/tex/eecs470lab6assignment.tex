@@ -1,0 +1,154 @@
+%***********************************************%
+%												%
+% EECS 470 - Lab 06								%
+%<------------------> 							%
+% Last Modified by:								%
+%	Jonathan Beaumont on 2014-2-21				%
+%												%
+%***********************************************%
+
+%***********************************************%
+% Preamble										%
+%***********************************************%
+
+\documentclass{article}
+
+\usepackage{
+	tikz,
+	xcolor,
+	colortbl,
+	graphicx,
+	amsmath,
+	amssymb,
+	mathrsfs,
+	float,
+	siunitx,
+	fancyhdr,
+	minted,
+	url,
+	listings
+}
+
+\usepackage
+	[left=1in,top=1in,right=1in,bottom=1in]
+	{geometry}
+
+\pagestyle{fancy}
+\raggedright
+
+%--- Header ---%
+
+\newcommand{\courseNumber}{EECS 470}
+\newcommand{\courseTitle}{Computer Architecture}
+\newcommand{\university}{University of Michigan, Ann Arbor}
+\newcommand{\labdate}{February 19$^{\text{rd}}$, 2015}
+
+
+\lhead{
+	\small{
+		\university
+	}
+}
+\rhead{
+	\small{
+		\emph{Date: \labdate} \hspace*{-1em}
+		% Why is the above \hspace necessary?
+	}
+}
+
+\newcommand{\shortbar}{
+	\vspace*{-12pt}
+	\begin{center}
+		\rule{5ex}{0.1pt}
+	\end{center}
+}
+\newcommand{\lab}[1]{
+	\begin{center}
+		\LARGE{
+			\vspace*{-12pt}
+			EECS 470 Lab #1 Assignment
+			\shortbar
+		}
+	\end{center}
+}
+
+
+%***********************************************%
+%                                               %
+% TikZ Definitions                              %
+%                                               %
+%***********************************************%
+
+\usetikzlibrary{shapes,arrows}
+
+% Block Diagram Styles
+\tikzstyle{block} = [draw, fill=blue!20, rectangle,
+        minimum height=3em, minimum width=6em]
+\tikzstyle{sum} = [draw, fill=blue!20, circle, node distance=2cm]
+\tikzstyle{input} = [coordinate]
+\tikzstyle{output} = [coordinate]
+\tikzstyle{branch} = [coordinate]
+\tikzstyle{pinstyle} = [pin edge={to-, thin, black}]
+
+% Signal Flow Graph Styles
+\tikzstyle{signal} = [draw, fill=blue!20, circle,
+	minimum height=3em]
+\tikzstyle{state} = [draw, fill=blue!20, circle,
+	minimum height=3em]
+
+%***********************************************%
+%                                               %
+% Document										%
+%                                               %
+%***********************************************%
+
+\begin{document}
+\vspace*{-20pt}
+\lab{6}
+\vspace*{-20pt}
+
+\section*{Note:}
+\begin{itemize}
+	\item The lab should be completed individually.
+	\item The lab must be submitted by 11:59PM on February 26th.
+\end{itemize}
+
+\section{Introduction}
+In this lab you will be designing a simplified, generically-sized Content Addressable Memory (CAM). A CAM has the property that, when queried with a value, it will search through all of its contents in parallel, returning the index at which that data exists (if it does). Our simplified CAM has the following module header:
+
+\begin{lstlisting}
+
+module CAM #(parameter SIZE=8) (
+	input clock, reset,
+	input enable,
+	
+	input COMMAND command,
+	
+	input	[31:0] data,
+	
+	input	[$clog2(SIZE)-1:0] write_idx,
+	
+	output	[$clog2(SIZE)-1:0] read_idx,
+	output	hit
+);
+	
+\end{lstlisting}
+
+CAM should have the following functionality:
+
+\begin{itemize}
+	\item The design will maintain a set of "SIZE" (default of 8) 32-bit memory elements, which should only be updated on the positive edge of "clock".
+	\item When "reset" is high on the rising clock edge, all entries in memory should be invalidated.
+	\item If "enable" is high and "command" is set to "WRITE" (see sys\_defs.vh), CAM should store the value of "data" to memory address "write\_idx" and validate it. If the index is out of bounds (larger than "SIZE-1"), CAM should not modify its memory.
+	\item If "enable" is high and "command" is "READ", CAM should write the lowest location of valid memory whose value equals "data" to "read\_idx". If the memory does not contain "data", "hit" should be set low. Otherwise, it should be high.
+\end{itemize}
+
+Before running 'make', set the "SIZE" by typing 'export CAM\_SIZE=[i]' in your terminal, replacing '[i]' with the appropriate integer. Your design should function correctly for any value of "SIZE". It is up to you how to implement this functionality. We recommend using a "for" loop inside of an "always" block. Remember than in a procedural block, all assignments happen simultaneously. If multiple assignments are made to the same variable, only the "later" one (the one listed furthest down in the block, or the furthest iteration of a "for" loop) takes effect.
+
+
+Your design should pass the testbench after synthesis as well, however you needn't worry for this lab about clock period. Just make a design that works.
+
+\section{Check Off}
+A script has been provided (check.sh) that checks the correctness for a few different test SIZES. Once you are passing all those cases, submit the lab using the standard submission script (/afs/umich.edu/user/m/o/moorthya/Public/470labsubmit -l6 lab6):
+
+\end{document}

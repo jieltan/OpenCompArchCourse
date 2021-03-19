@@ -1,0 +1,191 @@
+%***********************************************%
+%												%
+% EECS 470 - Lab 04								%
+%<------------------> 							%
+% Last Modified by:								%
+%	William Cunningham on 2013-12-25			%
+%												%
+%***********************************************%
+
+%***********************************************%
+% Preamble										%
+%***********************************************%
+
+\documentclass[dvipsnames]{article}
+
+\usepackage{
+	tikz,
+	xcolor,
+	colortbl,
+	graphicx,
+	amsmath,
+	amssymb,
+	float,
+	siunitx,
+	fancyhdr,
+	hyperref,
+	cleveref,
+	minted
+}
+
+\usepackage
+	[left=1in,top=1in,right=1in,bottom=1in]
+	{geometry}
+
+\pagestyle{fancy}
+\raggedright
+
+%--- Header ---%
+
+\newcommand{\courseNumber}{EECS 470}
+\newcommand{\courseTitle}{Computer Architecture}
+\newcommand{\university}{University of Michigan, Ann Arbor}
+\newcommand{\labdate}{3$^{\text{rd}}$ October, 2019}
+
+
+\lhead{
+	\small{
+		\university
+	}
+}
+\rhead{
+	\small{
+		\emph{Date: \labdate} \hspace*{-1em}
+		% Why is the above \hspace necessary?
+	}
+}
+
+\newcommand{\shortbar}{
+	\vspace*{-12pt}
+	\begin{center}
+		\rule{5ex}{0.1pt}
+	\end{center}
+}
+\newcommand{\lab}[1]{
+	\begin{center}
+		\LARGE{
+			\vspace*{-32pt}
+			EECS 470 Lab #1 Assignment
+			\shortbar
+			\vspace*{-20pt}
+		}
+	\end{center}
+}
+
+
+%***********************************************%
+%                                               %
+% TikZ Definitions                              %
+%                                               %
+%***********************************************%
+
+\usetikzlibrary{shapes,arrows}
+
+% Block Diagram Styles
+\tikzstyle{block} = [draw, fill=blue!20, rectangle,
+        minimum height=3em, minimum width=6em]
+\tikzstyle{sum} = [draw, fill=blue!20, circle, node distance=2cm]
+\tikzstyle{input} = [coordinate]
+\tikzstyle{output} = [coordinate]
+\tikzstyle{branch} = [coordinate]
+\tikzstyle{pinstyle} = [pin edge={to-, thin, black}]
+
+% Signal Flow Graph Styles
+\tikzstyle{signal} = [draw, fill=blue!20, circle,
+	minimum height=3em]
+\tikzstyle{state} = [draw, fill=blue!20, circle,
+	minimum height=3em]
+
+%***********************************************%
+%                                               %
+% Document										%
+%                                               %
+%***********************************************%
+
+\begin{document}
+\lab{5}
+
+\section*{Note:}
+\begin{itemize}
+	\item The lab should be completed individually.
+	\item The lab must be submitted by the end of Friday the
+		following week and checked off by a GSI.
+\end{itemize}
+
+\section{Introduction}
+You have just learned about the BASH shell and some of the useful utilities
+provided by the standard GNU/Linux environment. Today you will be using this
+knowledge to automate the testing of Project 3. The general form of this script
+will closely resemble the actual Project 3 Autograder, though there are a number
+of additional testcases which are not released to you.
+
+\section{Assignment}
+You are required to automatically check that a modified version of the
+Verisimple pipeline produces correct output. The following parts lay out how we 
+recommend you do this, but you are free to do this however you would like.
+
+\subsection{Ground Truth}
+\label{sec:truth}
+First, we need a \emph{ground truth}, a set of known-correct outputs. To build
+this, you should write a simple script to loop through files in a directory (the
+assembly testcases) and call a  command or commands on each of them. This should
+look something like:
+
+\inputminted[frame=lines]{bash}{scripts/ground-truth-skeleton.sh}
+
+\subsection{Testing}
+Now that you have a script that generates some ground truth data, it is time to
+modify it to compare that data with the output of some unknown version of the
+Verisimple pipeline. This will be done in several steps.
+
+First, you will need to run the script you wrote in \cref{sec:truth} to generate
+your ground truth. Then, you will need to make sure the executable you are 
+running is up-to-date. After that, for each of your testcases you will need to
+\begin{itemize}
+	\item Simulate the testcase. Do you need to rebuild the executable
+		for this?
+	\item Check that the \texttt{writeback.out} files match exactly with
+		the ground truth version. What utility does this?
+	\item Check that the lines beginning with \texttt{@@@} in the 
+		\texttt{program.out} files match exactly. What utility lets us
+		find only these lines, before using the one from above to
+		compare?
+	\item Print whether the testcase passed or failed.
+\end{itemize}
+
+\section{Check Off}
+In order to get your work checked off, you will need to show your \textbf{well-commented}
+scripts to a GSI. Once you think you have your scripts working, please add 
+yourself to the help queue and mark that you wish to be checked off. While you
+wait, you might consider implementing one of the optional features listed below
+or working on the project itself.
+
+\textbf{In addition, you also need to show your git repository of project 3 and grant Admin access to the account \texttt{eecs470staff@umich.edu}.}
+
+\appendix
+
+\section{Optional Features}
+This was a very basic version of this script, and we can improve it
+significantly from here forward. Here are a few things you could do to make this
+script better/prettier/more useful for the final project\dots
+
+\begin{itemize}
+	\item Use BASH functions to modularize this script. I would recommend adding
+		this to your \texttt{.bash\_profile} so that you can call (e.g.
+		\texttt{source .test.bash}).
+	\item Colorize your output. I find it more satisfying to read something like
+		\textcolor{Green}{\texttt{PASSED}} than to read \texttt{PASSED} without the
+		color. The Linux Documentation Project has a good description of 
+		\href{http://www.tldp.org/HOWTO/Bash-Prompt-HOWTO/x329.html}{BASH colors}.
+	\item You may want to move some significant portion of the handling of the
+		testcases/assembly files into the Makefile/test bench. For instance, the 
+		\texttt{\$readmemh} command in the test bench can be pointed at a file
+		provided by a \texttt{\`{}define}, which in turn can be provided by an
+		environment variable/Makefile macro. The dependency resolution
+		capabilities of make is also very useful for making sure that you are
+		running the right test case.
+	\item Detecting and killing infinite loops or hung simulations is extremely
+		useful, but also very hard. 
+\end{itemize}
+
+\end{document}

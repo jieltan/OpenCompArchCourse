@@ -1,0 +1,849 @@
+%*******************************************************%
+%														%
+% William Cunningham									%
+% wcunning@umich.edu									%
+% EECS 470 -- Lab 5										%
+%														%
+%*******************************************************%
+
+%*******************************************************%
+% Preamble													%
+%*******************************************************%
+
+\documentclass[table,dvipsnames]{beamer}
+\usetheme{Lab}
+
+\usepackage{
+	siunitx,
+	tikz,
+	graphicx,
+	amsmath,
+	float,
+	minted,
+	hyperref,
+	textcomp,
+	upquote,
+	multirow,
+	fancyvrb,
+	wrapfig,
+	multicol,
+	hyperref
+}
+
+\usepackage[T1]{fontenc}
+%-----------------------%
+% TikZ					%
+%-----------------------%
+%--- CircuiTikZ Definitions ---%
+
+%--- TikZ Definitions ---%
+\usetikzlibrary{shapes,arrows,automata,shadows,decorations,fadings}
+\pgfdeclarelayer{background}
+\pgfdeclarelayer{foreground}
+\pgfsetlayers{background,main,foreground}
+\tikzstyle{master-blank} = 
+[	draw, 
+	rounded corners, 
+	rectangle,
+	color=ForestGreen!25,
+	minimum height=0.5cm, 
+	minimum width=1.30cm
+]
+\tikzstyle{master-commit} = 
+[	draw, 
+	fill=ForestGreen!50, 
+	rounded corners, 
+	rectangle,
+	minimum height=0.5cm, 
+	minimum width=1.30cm
+]
+\tikzstyle{branch-commit} = 
+[	draw, 
+	fill=RoyalBlue!70, 
+	rounded corners,
+	rectangle,
+	minimum height=0.5cm, 
+	minimum width=1.30cm
+]
+\tikzstyle{clean-repo} = 
+[	draw, 
+	inner color=RoyalBlue!40, 
+	outer color=RoyalBlue!50, 
+	color=black,
+	circle,
+	minimum height=2cm
+]
+\tikzstyle{changes-repo} = 
+[	draw, 
+	inner color=Red!40, 
+	outer color=Red!50, 
+	color=black,
+	circle,
+	minimum height=2cm
+]
+
+\definecolor{darkblue}{rgb}{0,0,0.8}
+
+\hypersetup{colorlinks=true,linkcolor=,urlcolor=red}
+
+\newcommand{\masterrepo}[2]{
+	\scriptsize{\color{Black}\texttt{#1}} \\
+	\scriptsize{\color{OliveGreen}\texttt{HEAD=#2}}
+}
+
+\newcommand{\branchrepo}[2]{
+	\scriptsize{\color{Black}\texttt{#1}} \\
+	\scriptsize{\color{NavyBlue}\texttt{HEAD=#2}}
+}
+
+\newcommand{\commit}[1]{
+	\scriptsize{\texttt{#1}}
+}
+
+%*******************************************************%
+% Document												%
+%*******************************************************%
+
+\title[Lab 7: Memory and Caches]{EECS 470 Lab 7}
+\subtitle{Final Project Memory \& Caches}
+\institute[University of Michigan]{Department of Electrical Engineering and 
+			Computer Science \\
+			College of Engineering \\
+			University of Michigan}
+\date{{Thursday, October 24$^{\text{th}}$, 2019}}
+%\date{{Friday, Oct. 27$^{\text{th}}$, 2017}}
+
+
+\begin{document}
+\frame{\titlepage}
+
+\begin{frame}{Overview}
+	\tableofcontents
+\end{frame}
+
+\section{Project}
+\begin{frame}{Project time is here}
+	\begin{block}{Project}
+
+		\begin{itemize}
+		%	\item Milestone 1 is due Thursday, November 2$^{\text{nd}}$ (six days!)
+		%	\begin{itemize}
+		%		\item \textbf{At least two or three modules written and debugged}
+		%		\item Deliverables: 1-page progress report and one module for us to grade
+		%		\begin{itemize}
+		%			\item We'll introduce bugs to your module
+		%			\item Testbench should print ``PASSED'' or ``FAILED''
+		%			\item Submission: Canvas for report, submission script for Verilog files
+		%		\end{itemize}
+		%	\end{itemize}
+			\item Milestone 2 due Thursday, November 14$^{\text{th}}$
+				\begin{itemize}
+				\item \textbf{Run \href{https://www.eecs.umich.edu/courses/eecs470/projects/final_project/rv32_mult_no_lsq.s}{mult\_no\_lsq.s} with an instruction cache}
+				\item Another 1-page progress report, with a top level architectural diagram
+				\item Past experience suggests it takes 7-10 days to wire your pipeline together and debug \textit{after} writing all individual modules
+			\end{itemize}
+		\end{itemize}
+	\end{block}
+\end{frame}
+
+
+\section{Project Details}
+\begin{frame}{Project Specifics/Rules}
+	\begin{block}{Cache Size Restriction}
+		\begin{itemize}
+			\item 256 bytes (32 x 8 bytes) of data in the instruction cache
+			\item 256 bytes of data in the data cache.
+			\item One victim cache of four 8-byte blocks (32 bytes of data).
+			\begin{itemize}
+				\item Does not include whatever metadata you need for each block
+				\item LRU bits, valid bits, tag bits, etc... 
+				\item Levels the playing field for everyone, and avoids long synthesis times
+			\end{itemize}
+		\end{itemize}
+	\end{block}
+			
+	\begin{block}{Number of CDBs can be at most number of ways you are superscalar}
+			\begin{itemize}
+				\item Why? Design Compiler doesn't punish you as much as it should 
+				\item You will need to schedule or stall functional units
+			\end{itemize}
+	\end{block}
+\end{frame}
+
+\section{Disclaimer}
+\begin{frame}{Memory and Caches}
+	\begin{block}{Disclaimer}
+		\begin{itemize}
+			\item {What follows is recommendations from current and prior course staff}
+			\item {Better performance with different choices may be possible}
+			\item {The goal isn't to try to use everything...}
+			\item {Instead, think about what is worthwhile to incorporate in your project}
+		\end{itemize}
+	\end{block}
+\end{frame}
+
+
+\section{Memory}
+\begin{frame}[fragile]{Memory}
+	\begin{block}{Memory}
+		\begin{itemize}
+
+			\item System memory is non-synthesizable
+			\item Instantiated in mem.v in `testbenches' directory
+			\item Do not change the memory bus interface!
+			\item Memory responds at neg-edge of the clock
+			\item Keep in mind that although the address space is 32 bits, we only have 64 KiB of memory
+		\end{itemize}
+		\begin{minted}[tabsize=4]{verilog}
+always @(negedge clk) begin
+   mem2proc_response <= `SD next_mem2proc_response; 
+   mem2proc_data <= `SD next_mem2proc_data; 
+   mem2proc_tag <= `SD next_mem2proc_tag;
+end
+		\end{minted}
+	\end{block}
+\end{frame}
+
+\begin{frame}[fragile]{Memory}
+	\begin{block}{Wait, what is a ``tag''?}
+		\begin{itemize}
+			\item (Different from cache definition of ``tag'')
+			\item Tag is a tracking number: like a valet service or shipping a package
+			\item You order something online and get a tracking number
+			\begin{itemize} \item Tells you the order has been processed
+			\item Gives you a handle to sort through your mail \end{itemize}
+			\item Why not just use address? 
+			\begin{itemize} 
+				\item Tag indicates that request is in progress
+				\item Also indicates how many requests currently in flight 
+			\end{itemize}
+		\end{itemize}
+	\end{block}
+\end{frame}
+
+
+\begin{frame}[fragile]{Memory Interface}
+	\begin{block}{Memory Interface}
+		\begin{minted}[tabsize=2]{verilog}
+module mem (
+   input clk, // Memory clock
+   input [63:0] proc2mem_addr, // address of current command 
+   input [63:0] proc2mem_data, // data of current command
+   input [1:0] proc2mem_command, // `BUS_NONE, `BUS_LOAD, 
+                                 // or `BUS_STORE
+	
+	// 0 = no value, other = tag of transaction
+   output logic [3:0] mem2proc_tag,
+	// data resulting from a load
+   output logic [63:0] mem2proc_data, 
+	 // 0 = can't accept, other = tag of transaction 
+   output logic [3:0] mem2proc_response,
+);
+	
+		\end{minted}
+	\end{block}
+\end{frame}
+
+
+
+\begin{frame}[fragile]{Memory Interface}
+	\begin{block}{Memory Internal Signals}
+		\begin{minted}[tabsize=4]{verilog}
+logic [63:0] next_mem2proc_data;
+logic [3:0]next_mem2proc_response,next_mem2proc_tag; 
+
+logic [63:0] unified_memory [`MEM_64BIT_LINES - 1:0];
+logic [63:0] loaded_data [`NUM_MEM_TAGS:1]; 
+
+logic [`NUM_MEM_TAGS:1] [15:0] cycles_left;
+logic [`NUM_MEM_TAGS:1] waiting_for_bus; 
+
+logic acquire_tag;
+logic bus_filled;
+
+wire valid_address = (proc2mem_addr[2:0]==3'b0) && 
+	(proc2mem_addr<`MEM_SIZE_IN_BYTES);
+		\end{minted}
+	\end{block}
+\end{frame}
+
+\begin{frame}[fragile]{Memory Interface}
+	\begin{block}{Memory Macros}
+	\begin{itemize}
+		\item `MEM\_LATENCY\_IN\_CYCLES
+		\begin{itemize}
+			\item Memory latency is fixed to 100ns for every group
+			\item That means this macro will have a different value for each group
+			\item We will test default value, but you should test other latencies
+		\end{itemize}
+		\item `NUM\_MEM\_TAGS
+		\begin{itemize}
+			\item No. of outstanding requests that the memory can handle
+			\item We will be testing your processor with the value set to 15
+		\end{itemize}
+	\end{itemize}
+	\end{block}
+\end{frame}
+
+
+\begin{frame}[fragile]{Memory Interface}
+	\begin{block}{Memory Output}
+	\begin{itemize}
+		\item Response (mem2proc\_response)
+		\begin{itemize}
+			\item Slot number in which the memory has accommodated the request
+			\item Can be between 0 and 15 (inclusive)
+			\item `0' is a special case and means that request has been rejected
+			\begin{itemize}
+				\item Issued max amount of outstanding requests
+				\item Invalid address
+				\item No request (command) was made
+			\end{itemize}
+		\end{itemize}
+		\item Tag (mem2proc\_tag))
+		\begin{itemize}
+			\item Appears on the bus with the data for a load request
+			\item Slot no. in which the request had been accommodated
+			\item Can be between 0 and 15
+			\item `0' means the data on the bus is invalid (X's)
+			\item Non-zero means the data is valid
+		\end{itemize}
+	\end{itemize}
+	\end{block}
+\end{frame}
+
+\begin{frame}[fragile]{Memory Interface}
+	\begin{block}{Memory Output}
+	\begin{itemize}
+		\item Why do we need a tag anyway?
+		\begin{itemize}
+			\item Memory latency is non-zero
+			\begin{itemize} 
+				\item Want to pipeline more than one request at a time 
+				\item This is called a non-blocking controller
+				\item Need to know when a particular request has been fulfilled 
+			\end{itemize}
+			
+			\item Memory arbiter
+			\begin{itemize}
+				\item Up to three things may be contending for the memory
+				\item I-cache, D-cache and Prefetcher
+				\item Need to route requests to the right structure
+			\end{itemize}
+		\end{itemize}
+	\end{itemize}
+	\end{block}
+\end{frame}
+
+
+\begin{frame}[fragile]{Memory Interface}
+	\begin{block}{Incoming Memory Logic}
+		\begin{minted}[tabsize=3]{verilog}
+for(int i=1;i<=`NUM_MEM_TAGS;i=i+1) begin 
+   if(cycles_left[i]>16'd0) begin
+      cycles_left[i] = cycles_left[i]-16'd1; 
+   end else if(acquire_tag && !waiting_for_bus[i] 
+               && (cycles_left[i]==0)) begin 
+      next_mem2proc_response = i;
+      acquire_tag = 1'b0;
+      cycles_left[i] = `MEM_LATENCY_IN_CYCLES; 
+      if(proc2mem_command==`BUS_LOAD) begin
+        waiting_for_bus[i] = 1'b1;
+        loaded_data[i] = unified_memory[proc2mem_addr[63:3]]; 
+      end else begin
+        unified_memory[proc2mem_addr[63:3]]=proc2mem_data;
+      end
+   end
+		\end{minted}
+	\end{block}
+\end{frame}
+
+
+
+\begin{frame}[fragile]{Memory Interface}
+	\begin{block}{Outgoing Memory Logic}
+		\begin{minted}[tabsize=4]{verilog}
+if((cycles_left[i]==16'd0) && waiting_for_bus[i] 
+		&& !bus_filled) begin 
+   bus_filled = 1'b1;
+   next_mem2proc_tag = i;
+   next_mem2proc_data = loaded_data[i];
+   waiting_for_bus[i] = 1'b0;
+end
+		\end{minted}
+	\end{block}
+\end{frame}
+
+
+\begin{frame}[fragile]{Memory}
+	\begin{block}{Important Tidbits}
+		\begin{itemize}
+			\item You can change what you do with memory
+			\begin{itemize}
+				\item e.g. pipeline requests, prefetch addresses, novel caching techniques
+			\end{itemize}
+			\item But not how the memory actually works
+			\begin{itemize}
+				\item No modifying the memory module
+				\item No modifying the memory bus to handle more requests or wider requests
+			\end{itemize}
+			
+			\item Instantiated in mem.v in `testbenches' directory
+			\item Remember data bus will be x's except during BUS\_LOAD
+		\end{itemize}
+	\end{block}
+\end{frame}
+
+\section{Union}
+\begin{frame}[fragile]{More data types???}
+    
+    \begin{itemize}
+    \item So we covered structs before and you should be using them already
+    \item There is a "dual" of that - union
+    \item Just like its origin in C, a SystemVerilog union allows a single piece of storage to be represented different ways using different named member types
+    \item "In type theory, a struct is the product type of all its members, whereas a union is the sum type" - my buddy Pranav
+    \end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{Union example}
+    \item In a simple example, we have a representation of a 64 bit cache block 
+\begin{minted}[tabsize=4]{systemverilog}
+typedef union packed {
+    logic [63:0]      double;
+    logic [1:0][31:0] words;
+    logic [3:0][15:0] halves;
+    logic [7:0][7:0]  bytes;
+} CACHE_BLOCK;
+CACHE_BLOCK block;
+always_comb begin
+    block.double = 64'hfacefacefaceface; //the entire block
+    block.words[1] = 32'd420; //writing to the upper half 
+    block.bytes[2] = 8'd42;  //writing only one byte
+end
+\end{minted}
+\end{frame}
+
+\begin{frame}[fragile]{Another example}
+    \item Now let's say you want to break down addressing for different caches
+\begin{minted}[tabsize=4]{systemverilog}
+typedef struct packed {
+    logic [17:0] tag;
+    logic [10:0]  block_num;
+    logic [2:0]  block_offset;
+} DMAP_ADDR; //address breakdown for a direct-mapped cache
+typedef struct packed {
+    logic [19:0] tag;
+    logic [7:0]  set_index;
+    logic [2:0]  block_offset;
+} SASS_ADDR; //address breakdown for a set associative cache
+typedef union packed {
+    DMAP_ADDR d; //for direct mapped
+    SASS_ADDR s; //for set associative
+} ADDR; //now we can pass around a common data type
+\end{minted}
+\end{frame}
+
+\section{I-Cache Controller}
+\begin{frame}[fragile]{I-Cache Controller Piece by Piece}
+	\begin{block}{I-Cache Controller Interface}
+		\begin{minted}[tabsize=4]{verilog}
+assign {current_tag, current_index} = proc2Icache_addr[31:3]; 
+output logic [4:0] last_index,
+output logic [7:0] last_tag,
+		\end{minted}
+			\begin{itemize}
+			\item The instruction cache is direct mapped with 32 lines
+			\item Memory consists of 8192 lines
+			\item The index is therefore 5 bits and the block offset is 3 bits
+			\item Every cycle last\_index/tag $<=$ current\_index/tag
+			\begin{itemize} 
+				\item ``current'' signals come from Fetch
+				\item ``last'' registers used as write index/tag for I-Cache 
+			\end{itemize}	
+		\end{itemize}
+	\end{block}	
+\end{frame}
+
+
+
+
+
+\begin{frame}[fragile]{I-Cache Controller Piece by Piece}
+	\begin{block}{Fetch Memory Load}
+		\begin{minted}[tabsize=4]{verilog}
+wire changed_addr = (current_index!=last_index) 
+		|| (current_tag!=last_tag);
+		\end{minted}
+
+	\begin{itemize}
+		\item Anytime the address changed in fetch, changed\_addr will go high
+		\begin{itemize}
+			\item Cycle 12 here, so memory request issued in cycle 13
+		\end{itemize}
+	\end{itemize}
+
+	\begin{minted}[tabsize=1]{verilog}
+	Cycle:  IF   |   ID    |    EX   |   MEM    |   WB
+	11: 4: or    |  4:-    | 4:-     |   4:-    |	4:-
+	12: 8:-      |  4: or  | 4:-     |   4:-    |	4:-
+	13:	8:-      |  8:-    | 4: or   |   4:-    |	4:-   BUS_LOAD
+	14: 8:-      |  8:-    | 8:-     |   4: or  |	4:-
+	15:	8:-      |  8:-    | 8:-     |   8:-    |	4: or r3=4096
+	\end{minted}
+	\end{block}	
+\end{frame}
+
+\begin{frame}[fragile]{I-Cache Controller Piece by Piece}
+	\begin{block}{Hit in cache}
+		\begin{minted}[tabsize=4]{verilog}
+assign Icache_data_out = cachemem_data;
+assign Icache_valid_out = cachemem_valid;
+		\end{minted}
+
+	\begin{itemize}
+		\item This is just the data and valid cache line bit from the cache
+		\begin{itemize}
+			\item It is ready every cycle and never needs to wait
+		\end{itemize}
+		\item These outputs go to Fetch
+		\item Data to Fetch does not come from memory directly!
+	\end{itemize}
+	\end{block}	
+\end{frame}
+
+
+\begin{frame}[fragile]{I-Cache Controller Piece by Piece}
+	\begin{block}{Unanswered miss}
+		\begin{minted}[tabsize=4]{verilog}
+wire unanswered_miss = changed_addr ? !Icache_valid_out :
+		miss_outstanding & (Imem2proc_response==0);
+		\end{minted}
+
+	\begin{itemize}
+		\item Checked the cache and the value came back invalid 
+		\begin{itemize}
+			\item Now I will have to go to memory to get the data
+			\item Or I sent a request to memory and it hasn't been accepted yet
+		\end{itemize}
+		\item miss\_outstanding is just the stored value of unanswered miss
+		\begin{itemize}
+			\item Either I missed in the cache last cycle, or memory didn't accept request
+		\end{itemize}
+	\end{itemize}
+	\begin{minted}[tabsize=1]{verilog}
+	Cycle: 	IF 	|   ID   |   EX   |   MEM  |   WB
+	12: 8:  -   | 4: or  | 4:  -  |  4:-   |   4:-
+	13: 8:  -   | 8:-    | 4: or  |	 4:-   |   4:-  BUS_LOAD
+	\end{minted}
+
+	\end{block}	
+\end{frame}
+
+\begin{frame}[fragile]{I-Cache Controller Piece by Piece}
+	\begin{block}{Unanswered miss}
+		\begin{minted}[tabsize=4]{verilog}
+assign proc2Imem_addr = {proc2Icache_addr[63:3],3'b0};
+assign proc2Imem_command = (miss_outstanding && !changed_addr) 
+		? `BUS_LOAD : `BUS_NONE;		\end{minted}
+
+	\begin{itemize}
+		\item proc2Imem\_addr just cuts off the block offset bits 
+		\item proc2Imem\_command will issue a Bus Load 
+		\begin{itemize} \item If missed in the cache last cycle or a previous request wasn't accepted. \end{itemize}
+		\item If request is accepted, miss\_outstanding will be cleared.
+		\begin{itemize}
+			\item Looks at ``!changed\_addr'' because this indicates fetch PC changed
+			\begin{itemize}
+				\item If this happened, need to work on new request instead
+			\end{itemize}
+		\end{itemize}
+	\end{itemize}
+
+	\end{block}	
+\end{frame}
+
+\begin{frame}[fragile]{I-Cache Controller Piece by Piece}
+	\begin{block}{Tracking Tags}
+		\begin{minted}[tabsize=4]{verilog}
+wire update_mem_tag = changed_addr | miss_outstanding 
+		| data_write_enable;
+	\end{minted}
+	\begin{itemize}
+		\item Once you send a `BUS\_LOAD the memory will respond with a ID number on the negative edge
+		\item Need to hold onto this ID for your transaction (current\_mem\_tag) 
+		\item When miss\_outstanding is high, grab the ID number 
+		\begin{itemize} \item So that you can look for it when the memory broadcasts the value \end{itemize}
+		\item When data\_write\_enable is high, you want to clear the ID number
+		\begin{itemize} \item So you don't grab a new value with the same ID number \end{itemize}
+		\item When changed\_addr is high, clear the ID number
+		\begin{itemize} 
+			\item You don't care about the access anymore
+			\item Usually because a branch occurred 
+		\end{itemize}
+		
+	\end{itemize}
+
+	\end{block}	
+\end{frame}
+
+
+
+
+\begin{frame}[fragile]{I-Cache Controller Piece by Piece}
+	\begin{block}{Tracking Tags}
+	
+	\begin{minted}[tabsize=1]{verilog}
+    Cycle: IF   |  ID    |  EX    |  MEM   |  WB
+    47:  28:bne | 28:-   | 28:-   | 28:-   | 28:-
+    48:  32:    | 28:bne | 28:-   | 28:-   | 28:-
+    49:  32:-   | 32:-   | 28:bne | 28:-   | 28:- BUS_LOAD[32]
+    50:  32:-   | 32:-   | 32:-   | 28:bne | 28:-
+    51:  8:-    | 32:-   | 32:-   | 32:    | 28:bne
+    52:  8:blt  | 8:-    | 32:-   | 32:-   | 32:     
+	\end{minted}
+	\begin{itemize}
+		\item Clear ID number when changed\_address is high
+		\item Safe to clear register on that cycle because old request isn't needed
+		\item New memory request doesn't launch until next cycle
+		\begin{itemize} \item changed\_addr would assert on cycle 51, so ID for request gets cleared \end{itemize}
+		
+	\end{itemize}
+
+	\end{block}	
+\end{frame}
+
+
+
+\begin{frame}[fragile]{I-Cache Controller Piece by Piece}
+	\begin{block}{Tag Comes Back}
+	
+	\begin{minted}[tabsize=4]{verilog}
+assign data_write_enable = (current_mem_tag==Imem2proc_tag) 
+		&& (current_mem_tag!=0);	\end{minted}
+	\begin{itemize}
+		\item Write enable to the I-Cache will go high when the tag that is on the memory bus matches
+		\item The write index/tag is the index you sent off to the memory
+		\begin{itemize} \item Stored as current index/tag \end{itemize}
+	\end{itemize}
+
+	\end{block}	
+\end{frame}
+
+
+\begin{frame}[fragile]{I-Cache Controller Piece by Piece}
+	\begin{block}{Design Choices}
+	\begin{itemize}
+		\item Don't necessarily need to use the changed\_addr line
+		\begin{itemize} \item Could have IF send ``read\_valid'' signal \end{itemize}
+		\item Could use a wr\_idx instead of last\_idx
+		\begin{itemize} \item Gets set when you send off a `BUS\_LOAD \end{itemize}
+		\item Controller waits one cycle after cache miss to send to memory
+		\begin{itemize} \item Can probably be done in one cycle 
+		\item But you have to handle the cache lookup in half a cycle \end{itemize}
+		\item Prefetching will drastically increase performance
+		\begin{itemize} \item Make sure you can handle reads and writes in the same cycle \end{itemize}
+		
+	\end{itemize}
+
+	\end{block}	
+\end{frame}
+
+
+\begin{frame}[fragile]{D-Cache Controller}
+	\begin{block}{D-Cache Controller}
+	\begin{itemize}
+		\item Have the D-Cache take priority over the I-Cache in every case
+		\begin{itemize}
+			\item Stall the Fetch stage like P3 if this happens
+			\item Maybe change priority based on current ROB size
+		\end{itemize}
+		\item Similar to the I-Cache controller except now the controller can store to the cache along with memory
+		\begin{itemize}
+			\item Loads are handled the same as the I-Cache
+			\item Stores now store to the Cache and the Memory (unless WB D\$)
+			\begin{itemize}	 \item If the response is non-zero, assume the store completes
+			\item But will still take up an ID for the entire memory access time \end{itemize}
+			\end{itemize}
+	\end{itemize}
+
+	\end{block}	
+\end{frame}
+
+\begin{frame}[fragile]{D-Cache Controller}
+	\begin{block}{Non-blocking Cache}
+	\begin{itemize}
+		\item Can work on other requests while waiting for memory to supply misses
+		\item Miss Status Handling Registers (MSHRs) help in tracking the misses
+		\begin{itemize} \item Basically a table of tag, address, and data values that are waiting
+		\item A lot in common with a reservation station \end{itemize}
+		\item Need to match tag of incoming data to the proper load in the table
+		\item Increases complexity (but also performance!)
+	\end{itemize}
+
+	\end{block}	
+\end{frame}
+
+
+\begin{frame}[fragile]{Non-blocking Caches}
+	\begin{block}{Non-blocking Caches}
+	\begin{itemize}
+		\item For the D-Cache: have multiple independent memory operations
+		\begin{itemize} \item Want to be able to service another if one misses in cache
+				\item Will likely evict useful instructions for useless ones \end{itemize}
+		\item Basic idea: Use MSHRs to keep track of requests
+		\item Hard part is the implementation...
+			\begin{itemize} \item Figuring out when a request can go 
+			\begin{itemize} \item Depends on forwarding/speculative logic from lecture \end{itemize}
+			\item Updating and ordering requests
+			\item Once you launch a store, it's gone
+			\end{itemize}
+	\end{itemize}
+	\end{block}	
+\end{frame}
+
+
+\section{Memory Bus Example}
+
+\begin{frame}[fragile]{Memory Bus Example}
+	\begin{block}{Memory Bus Example}
+	\begin{itemize}
+		\item `NUM\_MEM\_TAGS = 3
+		\item Only loads are considered
+		\item `MEM\_LATENCY\_IN\_CYCLES = 5
+		\item Memory clocked on negedge
+		\item MSHRs clocked on posedge
+	\end{itemize}
+
+	\end{block}	
+\end{frame}
+
+
+
+\begin{frame}[fragile]{Stores}
+	\begin{block}{{Wait, what about stores?}}
+	\begin{itemize}
+		\item {Stores are registered in the memory in the same way}
+		\item {Need the same number of cycles as loads}
+		\item {If the response is 0,  it means the store has not launched}
+		\item {Memory requests are never reordered}
+		\begin{itemize}{Take a minute to convince yourself this is the case...} \end{itemize}
+		\item {Do we need to track stores in MSHRs?}
+	\end{itemize}
+
+	\end{block}	
+\end{frame}
+
+
+\section{Prefetching}
+\begin{frame}[fragile]{Prefetching}
+	\begin{block}{Prefetching}
+	\begin{itemize}
+		\item Idea: on a miss, grab more than just the current block
+		\begin{itemize} \item Maybe make some sort of state machine \end{itemize}
+		\item The farther you prefetch the more likely you will interfere with the D-Cache
+		\item More complicated issues the more you prefetch...
+		\begin{itemize} 
+			\item Suppose you prefetch two lines ahead of a taken branch
+			\begin{itemize} \item Best case: The two lines you prefetched are no longer needed 
+			\item Worst case: you evict instructions you need from your I-Cache \end{itemize}
+			\item Watch out for the interleaving of prefetched data and D-Cache data
+			\begin{itemize} \item Don't want to slow down the D-Cache \end{itemize}
+			\item Suppose your access misses but the data that you would prefetch hits in the cache
+		\end{itemize}
+	\end{itemize}
+
+	\end{block}	
+\end{frame}
+
+
+
+\begin{frame}[fragile]{Prefetching}
+	\begin{block}{Instruction Prefetching}
+	\begin{itemize}
+		\item Probably best to stick with prefetching for just I-Cache, not D-Cache
+		\item On a miss, grab more than just the current block
+		\begin{itemize} \item Hope that the instruction/data will be requested in the near future...
+			\item In which case it will already be in the cache (unless evicted) \end{itemize}
+		\item The farther you prefetch the more likely you will interfere with the D-Cache
+		\item More prefetching, more problems...
+		\begin{itemize} 
+			\item Need to track multiple outstanding requests to memory
+			\item Don't want to issue requests for lines that are already valid in the cache
+			\item What to do when Fetch requests something else in the middle of waiting for the previous miss to come back?
+			\item May run out of memory bandwidth 
+			\item May not get access to memory (if D-Cache requesting)
+		\end{itemize}
+	\end{itemize}
+
+	\end{block}	
+\end{frame}
+
+\begin{frame}[fragile]{Prefetching}
+	\begin{block}{Main algorithm (after miss observed)}
+	\begin{itemize}
+		\item Issue request for missed line, store address and memory response, start prefetch FSM
+		\item For as many cycles as we want to prefetch...
+		\begin{itemize} \item Increment prefetch address to next line
+			\item See if that line is valid in the cache
+			\item If not, store address somewhere to be requested later
+			\item When should you stop?
+			\begin{itemize} \item If you hit a valid line?
+				\item Fetch requests something else? (branch mispredicted)
+				\item D-Cache needs access to bus?
+			\end{itemize}
+		\end{itemize}
+	\item Recommend having a second read port on I-Cache for prefetcher to use
+	\end{itemize}
+
+	\end{block}	
+\end{frame}
+
+
+
+
+\begin{frame}[fragile]{Prefetching}
+	\begin{block}{Tracking Requests}
+	\begin{itemize}
+		\item Keep buffer of requests in cache controller (MSHRs)
+		\begin{itemize} \item Allocate entry on cache miss and we wish to prefetch
+			\begin{itemize} \item Store address (so we know where to write into cache)
+					\item Mark entry as wanting to send request
+			\end{itemize}
+			\item Look for entries wanting to send request
+			\begin{itemize}
+				\item Send request to memory with entry's stored address
+				\item Store mem2proc\_response back in entry
+				\item Mark entry as having sent a request
+			\end{itemize}
+			\item When data comes back from memory
+			\begin{itemize}
+				\item Compare mem2proc\_tag with stored responses from all valid buffer entries
+				\item Get \{tag,index\} from stored address for writing into the cache
+				\item De-allocate entry
+			\end{itemize}
+		\end{itemize}
+	\end{itemize}
+
+	\end{block}	
+\end{frame}
+
+\begin{frame}[fragile]{Prefetching}
+	\begin{block}{Prefetching Ideas}
+	\begin{itemize}
+		\item Conservative strategy: Grab next block on miss
+		\begin{itemize} \item Helps quite a bit: half of all instructions are prefetched \end{itemize}
+		\item Greedy strategy: march through memory
+		\begin{itemize} \item Will likely evict useful instructions for useless ones \end{itemize}
+		\item Move prefetch pointer on branch
+			\begin{itemize} \item Predict taken? Or not taken? Or both? 
+			\item Branch predictor information could be helpful to decide
+			\end{itemize}
+	\end{itemize}
+	\end{block}	
+\end{frame}
+
+
+
+
+\end{document}
+

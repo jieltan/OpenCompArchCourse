@@ -1,0 +1,768 @@
+%*******************************************************%
+%														%
+% William Cunningham									%
+% wcunning@umich.edu									%
+% EECS 470 -- Lab 2										%
+%														%
+%*******************************************************%
+
+%*******************************************************%
+% Preamble												%
+%*******************************************************%
+
+\documentclass[dvipsnames]{beamer}
+\usetheme{Lab}
+
+\usepackage{
+	siunitx,
+	tikz,
+	graphicx,
+	amsmath,
+	float,
+	minted,
+	hyperref,
+	textcomp,
+	upquote
+}
+
+%-----------------------%
+% TikZ					%
+%-----------------------%
+%--- CircuiTikZ Definitions ---%
+
+%--- TikZ Definitions ---%
+\usetikzlibrary{shapes,arrows,automata,shadows}
+\pgfdeclarelayer{background}
+\pgfdeclarelayer{foreground}
+\pgfsetlayers{background,main,foreground}
+% Block Diagram Styles
+\tikzstyle{block} = [draw, fill=RoyalBlue!50, rounded corners, rectangle,
+        minimum height=2cm, minimum width=2cm]
+\tikzstyle{sum} = [draw, fill=blue!20, circle, node distance=2cm]
+\tikzstyle{input} = [coordinate]
+\tikzstyle{output} = [coordinate]
+\tikzstyle{branch} = [coordinate]
+\tikzstyle{pinstyle} = [pin edge={to-, thin, black}]
+% Signal Flow Graph Styles
+\tikzstyle{signal} = [draw, fill=blue!20, circle,
+	minimum height=3em]
+
+\definecolor{darkblue}{rgb}{0,0,0.8}
+
+\hypersetup{colorlinks=true,linkcolor=,urlcolor=red}
+
+%*******************************************************%
+% Document												%
+%*******************************************************%
+
+\title[Lab 2: Build System]{EECS 470 Lab 2}
+\subtitle{Synopsys Build System}
+\institute[University of Michigan]{Department of Electrical Engineering and 
+			Computer Science \\
+			College of Engineering \\
+			University of Michigan}
+\date{January 28/29, 2021}
+
+\begin{document}
+\frame{\titlepage}
+
+\begin{frame}{Overview}
+	\tableofcontents
+\end{frame}
+
+\section{Administrivia}
+\begin{frame}{Administrivia}
+
+\begin{block}{Homework}
+		\begin{itemize}
+			\item Homework 1 is due Thursday, 4th$^{\text{th}}$ February, 2021 11:59 PM (turn in via Gradescope)
+		\end{itemize}
+\end{block}
+\begin{block}{Projects}
+	\begin{itemize}
+        \item Project 1 is due Friday, 29th$^{\text{th}}$ January, 2021 11:59 PM (turn in via submission script)
+		\item We will monitor Piazza up to the project deadline. Please create a private post if you are having trouble submitting.
+	\end{itemize}
+\end{block}
+	\begin{block}{}
+		We are available to answer your questions. Office hours can
+		be found on the course page and questions can be posted in the course
+		Piazza.
+	\end{block}
+\end{frame}
+
+\begin{frame}{Administrivia}
+
+\begin{block}{Labs}
+		\begin{itemize}
+			\item Lab 1 is due by the end of lab (12:30pm) on 1/29!
+			\item Lab 2 is due by the end of lab (12:30pm) on 2/5!
+		\end{itemize}
+\end{block}
+\end{frame}
+
+\section{Generic Verilog Design}
+
+\subsection{Preprocessor Directives}
+\begin{frame}{Preprocessor Directives}
+	\begin{block}{What is a preprocessor?}
+		\begin{itemize}
+			\item Prepares code/designs for compilation
+				\begin{itemize}
+					\item Combines included files
+					\item Replaces comments and whitespace
+				\end{itemize}
+		\end{itemize}
+	\end{block}
+	\begin{block}{Why do I care?}
+		\begin{itemize}
+			\item Programmable
+			\item Generic Designs (parameterized caches anyone?)
+		\end{itemize}
+	\end{block}
+\end{frame}
+
+\begin{frame}{Verilog Macros}
+	\begin{block}{Definitions}
+		\begin{itemize}
+			\item Syntax: \texttt{\`{}define <NAME> <value>} 
+				\begin{itemize}
+					\item Note: That is a \textbf{tick}, not an apostrophe 
+						before define
+					\item The tick character is found with the \~{}, usually
+						above tab (on US standard layout keyboards)
+				\end{itemize}
+			\item Usage: \texttt{\`{}<NAME>}
+			\item Good for naming constants (can be used like wires)
+			\item Convention dictates that macro names be in all caps
+			\item Can also \texttt{\`{}undef <NAME>}
+		\end{itemize}
+	\end{block}
+\end{frame}
+
+\begin{frame}{Verilog Macros}
+	\begin{block}{Flow Control}
+		Text inside flow control is conditionally included in the
+		compiled source file.
+	\end{block}
+	\begin{columns}
+		\begin{column}[T]{0.9\textwidth}
+			\begin{itemize}
+				\item[\texttt{\`{}ifdef}] Checks if something is defined
+				\item[\texttt{\`{}else}] Normal else behavior
+				\item[\texttt{\`{}endif}] End the if
+				\item[\texttt{\`{}ifndef}] Checks if something is not
+					defined
+			\end{itemize}
+		\end{column}
+	\end{columns}	
+\end{frame}
+
+\begin{frame}{Verilog Macros by Example}
+	\vspace*{-12pt}
+	\inputminted[frame=lines,fontsize=\scriptsize,tabsize=4,obeytabs=true]{verilog}{verilog/macro.v}
+\end{frame}
+
+\begin{frame}[fragile]{Verilog Headers}
+	\begin{block}{What is inclusion?}
+		\begin{itemize}
+			\item Paste the code from the specified file where the directive is
+				placed
+		\end{itemize}
+	\end{block}
+	\begin{block}{Where will I use this?}
+		\begin{itemize}
+			\item System defines separated out, e.g.
+				\begin{minted}[fontsize=\scriptsize]{verilog}
+`define ALU_OP_ADD 5'b10101
+				\end{minted}
+				\begin{minted}[fontsize=\scriptsize]{verilog}
+`define DCACHE_NUM_WAYS 4'b0100
+				\end{minted}
+			\item Macro assertion functions, printing functions, etc.
+			\item Note: headers are named with the \texttt{.vh} extension
+		\end{itemize}
+	\end{block}
+\end{frame}
+
+\begin{frame}[fragile]{Verilog Headers}
+	\begin{block}{Inclusion}
+		\begin{itemize}
+			\item Syntax: \texttt{\`{}include <FILE\_NAME>}
+			\item Pastes the contents of \texttt{<FILE\_NAME>} wherever the include appears
+		\end{itemize}
+	\end{block}
+	\begin{block}{Include Guards}
+		\begin{itemize}
+			\item Inside the header\dots
+				\begin{minted}[fontsize=\scriptsize]{verilog}
+`ifndef __FILE_NAME_H__
+`define __FILE_NAME_H__
+				\end{minted}
+				$ \mathtt{\vdots} $ 
+				\begin{minted}[fontsize=\scriptsize]{verilog}
+`endif
+				\end{minted}
+		\end{itemize}
+	\end{block}
+	\begin{block}{Note}
+		\texttt{\`{}include} does not work with the autograder and is not
+		allowed for projects 1, 2 and 3.
+	\end{block}
+\end{frame}
+
+\begin{frame}{Verilog Inclusion by Example}
+	\begin{block}{\texttt{and4.v}}
+		\inputminted[frame=lines,obeytabs,tabsize=4,fontsize=\scriptsize]{verilog}{verilog/and4.v}
+	\end{block}
+\end{frame}
+
+\begin{frame}{Verilog Inclusion by Example}
+	\begin{block}{\texttt{and2.v}}
+		\inputminted[frame=lines,obeytabs,tabsize=4,fontsize=\scriptsize,firstline=3,lastline=9]{verilog}{verilog/and2.v}
+	\end{block}
+\end{frame}
+
+\begin{frame}{Verilog Inclusion by Example}
+	\begin{block}{Better \texttt{and2.v}}
+		\inputminted[frame=lines,obeytabs,tabsize=4,fontsize=\scriptsize]{verilog}{verilog/and2.v}
+	\end{block}
+\end{frame}
+
+\begin{frame}{More Information}
+	\begin{block}{Bibliography}
+		Much of this information was taken from the 
+		\href{http://www.veripool.org/papers/Preproc_Good_Evil_SNUGBos10_paper.pdf}{Verilog Preprocessor}
+		paper by Wilson Snyder of Cavium Networks. It is \emph{highly}
+		recommended reading.
+	\end{block}
+\end{frame}
+
+\subsection{Parameters}
+\begin{frame}[fragile]{Parameters}
+	\begin{block}{What is a \texttt{parameter}?}
+		\begin{itemize}
+			\item Constant defined inside a module
+			\item Used to set module properties
+			\item Can be overridden on instantiation
+		\end{itemize}
+	\end{block}
+	\begin{block}{How do I use them?}
+		\begin{itemize}
+			\item Definition
+				\begin{minted}[fontsize=\scriptsize]{verilog}
+parameter NUM_CACHE_LINES = 8;
+				\end{minted}
+		\end{itemize}
+	\end{block}
+\end{frame}
+
+\begin{frame}[fragile]{Setting Parameters}
+	\begin{block}{Overriding}
+		\begin{itemize}
+			\item Set parameters for a module on instantiation
+			\item Allows for different versions different places
+			\item Usage:
+				\begin{minted}[fontsize=\scriptsize]{verilog}
+cache #(.NUM_CACHE_LINES(4)) d_cache(...);
+				\end{minted}
+		\end{itemize}
+	\end{block}
+	\begin{block}{\texttt{defparam}}
+		\begin{itemize}
+			\item Set parameters for a module 
+			\item Usage: 
+				\begin{minted}[fontsize=\scriptsize]{verilog}
+defparam dcache.NUM_CACHE_LINES = 4;
+				\end{minted}
+		\end{itemize}
+	\end{block}
+\end{frame}
+
+\begin{frame}{Macros Vs. Parameters}
+	\begin{columns}
+		\begin{column}[T]{0.45\textwidth}
+			\begin{block}{Macros}
+				\begin{itemize}
+					\item Possibly globally scoped -- namespace collision
+					\item Use for modules that can change, but only have one
+						instance
+					\item Particularly for caches and naming arbitrary constants
+					\item Needs the \texttt{\`{}} in usage
+				\end{itemize}
+			\end{block}
+		\end{column}
+		\begin{column}[T]{0.1\textwidth}
+			\vspace*{0.3\textheight}
+			\Large{vs.}
+			\normalsize
+		\end{column}
+		\begin{column}[T]{0.45\textwidth}
+			\begin{block}{Parameters}
+				\begin{itemize}
+					\item Locally scoped -- no namespace collision
+					\item Use for modules with many instances at different sizes
+					\item Particularly for \texttt{generate} blocks (which are
+						in a later lab)
+					\item Does not need extra characters (like the
+						\texttt{\`{}})
+				\end{itemize}
+			\end{block}
+		\end{column}
+	\end{columns}
+\end{frame}
+
+\subsection{Hierarchical Design}
+\begin{frame}{Array Connections}
+	\begin{itemize}
+		\item Make a simple module a duplicate it several times
+		\item Assume we have a module defintion: 
+			\begin{itemize}
+				\item \texttt{one\_bit\_addr(a, b, cin, sum, cout);}
+			\end{itemize}
+		\item All ports are 1 bit, the first three inputs, last two outputs
+		\item How do we build an eight bit adder?
+	\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{The Error Prone Way}
+\begin{minted}[fontsize=\scriptsize,frame=lines,obeytabs,tabsize=4]{verilog}
+module eight_bit_addr(
+    input en, cin,
+    input [7:0] a, b,
+    output [7:0] sum,
+    output cout);
+
+    wire [6:0] carries;
+
+    one_bit_addr a0(en, a[0], b[0], cin, sum[0], carries[0]);
+    one_bit_addr a1(en, a[1], b[1], carries[0], sum[1], carries[1]);
+    one_bit_addr a2(en, a[2], b[2], carries[1], sum[2], carries[2]);
+    one_bit_addr a3(en, a[3], b[3], carries[2], sum[3], carries[3]);
+    one_bit_addr a4(en, a[4], b[4], carries[3], sum[4], carries[4]);
+    one_bit_addr a5(en, a[5], b[5], carries[4], sum[5], carries[5]);
+    one_bit_addr a6(en, a[6], b[6], carries[5], sum[6], carries[6]);
+    one_bit_addr a7(en, a[7], b[7], carries[6], sum[7], cout);
+endmodule
+\end{minted}
+\end{frame}
+
+\begin{frame}{The Error Prone Way}
+	\begin{itemize}
+		\item Lots of duplicated code
+		\item Really easy to make mistake
+		\item Now try building a 64-bit adder..., 256?
+		\item There is a one line substitute
+	\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{The Better Way}
+\begin{minted}[fontsize=\scriptsize,frame=lines,obeytabs,tabsize=4]{verilog}
+module eight_bit_addr(
+    input en, cin,
+    input [7:0] a, b,
+    output [7:0] sum,
+    output cout);
+
+    wire [6:0] carries;
+
+    one_bit_addr addr [7:0] (
+        .en(en), .a(a), .b(b), .cin({carries,cin}),
+        .sum(sum), .cout({cout,carries})
+    );
+endmodule
+\end{minted}
+
+All of the ports in the \texttt{one\_bit\_addr} module are 1 bit wide. All of the
+busses we pass are 8 bits wide, so each instantiation of the module will get
+one, except \texttt{en} which is only 1 bit wide and thus copied to every module.
+
+\end{frame}
+
+\begin{frame}[fragile]{The (Even) Better Way}
+\begin{minted}[fontsize=\scriptsize,frame=lines,obeytabs,tabsize=4]{verilog}
+`define ADDR_WIDTH 8
+module eight_bit_addr(
+    input en, cin,
+    input [(`ADDR_WIDTH-1):0] a, b,
+    output [(`ADDR_WIDTH-1):0] sum,
+    output cout);
+
+    wire [(`ADDR_WIDTH-2):0] carries;
+
+    one_bit_addr addr [(`ADDR_WIDTH-1):0] (
+        .en(en), .a(a),.b(b),.cin({carries,cin}),
+        .sum(sum),.cout({cout,carries})
+    );
+endmodule
+\end{minted}
+\end{frame}
+
+\begin{frame}[fragile]{Array Connections: Pitfalls and Errors}
+What happens if a wire isn't 1 or N bits wide?
+\begin{minted}[fontsize=\scriptsize,frame=lines,obeytabs,tabsize=4]{verilog}
+wire foo;
+wire [3:0] bar;
+wire [2:0] baz;
+
+simple s1 [3:0](.a(foo), .b(bar), .c(baz));
+\end{minted}
+\scriptsize{\texttt{test.v:14: error: Port expression width 3 does not match expected width 4
+or 1}} \normalsize \\
+But still easy to accidentally promote a wire to a bus
+\end{frame}
+
+
+\section{Tools}
+
+\subsection{Make}
+
+\begin{frame}{What is Make?}
+	\begin{block}{What is Make?}
+		\begin{itemize}
+			\item Build System
+				\begin{itemize}
+					\item Automatically build an \emph{executable} from
+						\emph{source} files
+					\item Rules for building are stored in a \texttt{Makefile}
+				\end{itemize}
+			\item Essentially a script of compilation commands
+			\item Handles dependency resolution
+		\end{itemize}
+	\end{block}
+	\pause
+	\begin{block}{Why do I care?}
+		\pause
+		\begin{itemize}
+			\item \texttt{simv} is an \emph{executable}
+			\item \emph{Verilog} files are \emph{source} files
+			\item \texttt{vcs} is a compilation command
+		\end{itemize}
+	\end{block}
+\end{frame}
+
+\begin{frame}{Anatomy of a \texttt{Makefile}}
+	\begin{columns}
+		\begin{column}[c]{0.70\textwidth}
+			\begin{itemize}
+				\item[\texttt{targets}] are what we want to build
+				\item[\texttt{dependencies}] are what we need to build it
+				\item[\texttt{commands}] are how to build it 
+			\end{itemize}
+		\end{column}
+	\end{columns}
+	\begin{block}{}	
+		This looks something like the following
+		\inputminted[fontsize=\scriptsize,frame=lines]{makefile}{scripts/Makefile.example}
+	\end{block}
+\end{frame}
+
+\begin{frame}{Lab 1 \texttt{Makefile}}
+	\inputminted[fontsize=\scriptsize,frame=lines,firstline=33,lastline=34,fontsize=\scriptsize]{makefile}{scripts/Makefile} 
+	\inputminted[fontsize=\scriptsize,frame=lines,firstline=41,lastline=45,fontsize=\scriptsize]{makefile}{scripts/Makefile}
+
+	What do the \texttt{\$()} mean?
+\end{frame}
+
+\begin{frame}{\texttt{Makefile} Macros}
+	A \emph{macro} is a way to store custom build behavior. 
+
+	\inputminted[frame=lines,firstline=15,lastline=15,fontsize=\scriptsize]{makefile}{scripts/Makefile}
+	\inputminted[frame=lines,firstline=25,lastline=26,fontsize=\scriptsize]{makefile}{scripts/Makefile}
+	\inputminted[frame=lines,firstline=33,lastline=34,fontsize=\scriptsize]{makefile}{scripts/Makefile} 
+\end{frame}
+
+\begin{frame}{Dependency Resolution}
+	\begin{block}{What does it mean to be a dependency?}
+		\begin{itemize}
+			\item Dependencies are used during compilation, e.g. list of source
+				files
+			\item Might be intermediate or primary 
+		\end{itemize}
+	\end{block}
+	\begin{block}{How does Make resolve dependencies?}
+		\begin{itemize}
+			\item Does the target exist? 
+				\begin{itemize}
+					\item[No --] Build it.
+					\item[Yes --] When was it built in relation to the
+						dependencies?
+						\begin{itemize}
+							\item[After --] Stop.
+							\item[Before --] Rebuild.
+						\end{itemize}
+				\end{itemize}
+		\end{itemize}
+	\end{block}
+\end{frame}
+
+\begin{frame}{Automatic \texttt{Makefile} Macros}
+	\begin{itemize}
+		\item[\texttt{\$@}] The Current Target Name
+		\item[\texttt{\$\^}] A List of All Dependencies
+		\item[\texttt{\$<}] The First Prerequisite
+		\item[\texttt{\$?}] A List of All Dependencies Requiring Rebuilding
+	\end{itemize}
+\end{frame}
+
+\begin{frame}{Special \texttt{Makefile} Targets}
+	\begin{columns}
+		\begin{column}[c]{0.75\textwidth}
+			\begin{itemize}
+				\item[\texttt{.DEFAULT}] Sets what runs when \texttt{make} is executed
+					with no arguments 
+				\item[\texttt{.PHONY}] Dependencies will be built
+					unconditionally 
+				\item[\texttt{.PRECIOUS}] Dependencies will be kept,
+					intermediate or not
+				\item[\texttt{.SECONDARY}] Dependencies are automatically
+					treated as intermediates, but not deleted
+			\end{itemize}
+		\end{column}
+	\end{columns}
+\end{frame}
+
+\begin{frame}{\texttt{Make} Resources}
+	\begin{itemize}
+		\item \href{http://www.gnu.org/software/make/manual/make.pdf}{GNU Make Manual}
+			\begin{itemize}
+				\item Special Targets
+				\item Automatic Variables
+				\item Makefile Conventions 
+			\end{itemize}
+		\item \href{http://en.wikipedia.org/wiki/Make_(software)}{Wikipedia - Make (Software)}
+	\end{itemize}	
+\end{frame}
+
+\subsection{VCS}
+\begin{frame}{Intro to VCS}
+	\begin{block}{What is VCS?}
+		\begin{itemize}
+			\item Synopsys Verilog Compiler Simulator
+			\item Builds Simulators from Verilog (structural or behavioral)
+			\item We barely manage to brush the surface\dots
+		\end{itemize}
+	\end{block}
+	\begin{block}{Why do we care?}
+		\begin{itemize}
+			\item Knowledge is power\dots
+			\item \dots Specifically the power to debug
+		\end{itemize}
+	\end{block}
+\end{frame}
+
+\begin{frame}{VCS by Example}
+	\inputminted[frame=lines,firstline=15,lastline=15,fontsize=\scriptsize]{makefile}{scripts/Makefile}
+	\begin{columns}
+		\begin{column}[c]{0.75\textwidth}
+			\begin{itemize}
+				\item[\texttt{SW\_VCS}] CAEN specific; sets which one of the
+					installed VCS versions is run
+				\item[\texttt{-sverilog}] Interpret designs using the
+					SystemVerilog standard
+				\item[\texttt{+vc}] Allow direct C code hooks in the design
+				\item[\texttt{-Mupdate}] Compile incrementally
+				\item[\texttt{-line}] Allow interactive debugging (might need
+					other options)
+				\item[\texttt{-full64}] Build 64 bit executables
+			\end{itemize}
+		\end{column}
+	\end{columns}
+\end{frame}
+
+\begin{frame}{More VCS Options}
+	\begin{columns}
+		\begin{column}[c]{0.75\textwidth}
+			\begin{itemize}
+				\item[\texttt{+define}] Define a \texttt{\`{}define} macro \\ 
+					Ex. +define+DEBUG, Ex. +define+CLK=10
+				\item[\texttt{+lint=all}] Provide many more warnings
+				\item[\texttt{-gui}] Build a DVE executable for interactive
+					waveform debugging
+				\item[\texttt{-o}] Name of the executable generated
+				\item[\texttt{-R}] Run the executable after compilation
+			\end{itemize}
+		\end{column}
+	\end{columns}
+\end{frame}
+
+\subsection{Design Compiler}
+\begin{frame}{Intro to Design Compiler and Synthesis}
+	\begin{block}{What is synthesis?}
+		\begin{itemize}
+			\item The process of turning Behavioral Verilog into Structural
+				Verilog
+			\item Using a technology library
+		\end{itemize}
+	\end{block}
+	\begin{block}{Why do I care?}
+		\begin{itemize}
+			\item Example of how a design might be built
+			\item Informed guesses about\dots 
+				\begin{itemize}
+					\item Power
+					\item Area
+					\item Performance
+				\end{itemize}
+		\end{itemize}
+	\end{block}
+\end{frame}
+
+\begin{frame}{Intro to Design Compiler and Synthesis}
+	\begin{block}{What is Design Compiler?}
+		\begin{itemize}
+			\item The Synopsys synthesis tool
+			\item Industry-leading
+		\end{itemize}
+	\end{block}
+	\begin{block}{Why do we care?}
+		\begin{itemize}
+			\item The tool for EECS 470
+			\item Once again, because knowledge is power\dots
+			\item \dots Specifically, the power to Google
+		\end{itemize}
+	\end{block}
+\end{frame}
+
+\begin{frame}{Design Compiler by Example}
+	\inputminted[fontsize=\scriptsize,frame=lines,firstline=13,lastline=17]{tcl}{scripts/tut_synth.tcl}
+	\begin{columns}
+		\begin{column}[c]{0.75\textwidth}
+			\begin{itemize}
+				\item[\texttt{read\_file}]
+					Read through the files in the list for dependency resolution
+					and error, perform operator replacement
+				\item[\texttt{design\_name}] 
+					Design to be synthesized
+				\item[\texttt{clock\_name}]
+					Name of the clock net 
+				\item[\texttt{reset\_name}]
+					Name of the reset net
+				\item[\texttt{clk\_period}]
+					Clock period ($T_{clk}$) in ns
+			\end{itemize}
+		\end{column}
+	\end{columns}
+\end{frame}
+
+\begin{frame}{Design Compiler by Example}
+	\inputminted[fontsize=\scriptsize,frame=lines,firstline=119,lastline=119]{tcl}{scripts/tut_synth.tcl}
+	\begin{columns}
+		\begin{column}[c]{0.75\textwidth}
+			\begin{itemize}
+				\item[\texttt{compile}] This command actually synthesizes the
+					design. \texttt{-map\_effort} can be medium or high.
+			\end{itemize}
+		\end{column}
+	\end{columns}
+	\inputminted[fontsize=\scriptsize,frame=lines,firstline=118,lastline=118]{tcl}{scripts/tut_synth.tcl}
+	\begin{columns}
+		\begin{column}[c]{0.75\textwidth}
+			\begin{itemize}
+				\item[\texttt{\$chk\_file}] This command creates the
+					\texttt{*.chk} file with the design warnings
+			\end{itemize}
+		\end{column}
+	\end{columns}
+	\inputminted[fontsize=\scriptsize,frame=lines,firstline=120,lastline=120]{tcl}{scripts/tut_synth.tcl}
+	\begin{columns}
+		\begin{column}[c]{0.75\textwidth}
+			\begin{itemize}
+				\item[\texttt{\$netlist}] Writing with \texttt{-format} verilog
+					generates the \texttt{*.vg} file containing the structural
+					verilog output
+			\end{itemize}
+		\end{column}
+	\end{columns}
+\end{frame}
+			
+\begin{frame}{Design Compiler by Example}
+	\inputminted[fontsize=\scriptsize,frame=lines,firstline=121,lastline=121]{tcl}{scripts/tut_synth.tcl}
+	\begin{columns}
+		\begin{column}[c]{0.75\textwidth}
+			\begin{itemize}
+				\item[\texttt{\$ddc\_file}] This command generates the
+					\texttt{*.ddc} file, which is included in designs where we
+					want to synthesize a module separately. More on this in 
+					Project 2. This replaces the \texttt{*.db} file mentioned in
+					Lab 1.
+			\end{itemize}
+		\end{column}
+	\end{columns}
+\end{frame}
+
+\begin{frame}{Design Compiler by Example}
+	\inputminted[fontsize=\scriptsize,frame=lines,firstline=122,lastline=125]{tcl}{scripts/tut_synth.tcl}
+	\begin{columns}
+		\begin{column}[c]{0.75\textwidth}
+			\begin{itemize}
+				\item[\texttt{\$rep\_file}] This command generates the
+					\texttt{*.rep} file, containing the timing report for the
+					synthesized design. More on this in Project 2.
+			\end{itemize}
+		\end{column}
+	\end{columns}
+\end{frame}
+
+\begin{frame}{Design Compiler by Example}
+	\inputminted[fontsize=\scriptsize,frame=lines,firstline=44,lastline=45]{makefile}{scripts/Makefile}
+	\begin{columns}
+		\begin{column}[c]{0.75\textwidth}
+			\begin{itemize}
+				\item[$|$ tee] This command saves the output of the synthesis
+					tool into a file. Errors and warnings found in this file are
+					particularly important.
+			\end{itemize}
+		\end{column}
+	\end{columns}
+\end{frame}
+
+\begin{frame}{Designs in Memory}
+	\begin{columns}
+		\begin{column}[T]{0.45\textwidth}
+			\begin{block}{\texttt{analyze\dots elaborate}}
+				\begin{itemize}
+					\item Creates intermediate files 
+						\begin{itemize}
+							\item Specifically, templates of generated designs with
+								parameterized sizes
+						\end{itemize}
+					\item Automatically links design components to templates
+					\item Specifically resolves several errors that you will
+						encounter in the final project
+			\end{itemize}
+			\end{block}
+		\end{column}
+		\begin{column}[T]{0.1\textwidth}
+			\vspace*{0.3\textheight}
+			\Large{vs.}
+			\normalsize
+		\end{column}
+		\begin{column}[T]{0.45\textwidth}
+			\begin{block}{\texttt{read\_file}}
+				\begin{itemize}
+					\item Simpler, single command
+					\item No intermediate files
+					\item No linking
+					\item Can cause problems
+				\end{itemize}
+			\end{block}
+		\end{column}
+	\end{columns}
+\end{frame}
+
+\begin{frame}{Lab Assignment}
+	\begin{itemize}
+		\item Assignment is posted on the  
+			\href{https://www.eecs.umich.edu/courses/eecs470/?page=schedule.php}{
+			course web site}.
+		\item If you get stuck\dots
+			\begin{itemize}
+				\item Ask us in Office Hours!
+				\item Ask on Piazza
+			\end{itemize}
+		\item When you are finished, put yourself on \href{https://oh.eecs.umich.edu/courses/eecs470}{help queue} to get checked off
+		\item Check-off is due by end of lab (12:30pm) on 2/5
+	\end{itemize}
+\end{frame}
+\end{document}

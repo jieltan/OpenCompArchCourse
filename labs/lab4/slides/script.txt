@@ -1,0 +1,131 @@
+[jbbeau@dahak ~] $ git clone git@bitbucket.org:eecs470staff/course_material.git
+Cloning into '.'...
+remote: Counting objects: 79, done.
+remote: Compressing objects: 100% (68/68), done.
+remote: Total 79 (delta 13), reused 0 (delta 0)
+Receiving objects: 100% (79/79), 79.99 KiB, done.
+Resolving deltas: 100% (13/13), done.
+[jbbeau@dahak slides] [master *] $ git status
+# On branch master
+# Changes not staged for commit:
+#   (use "git add <file>..." to update what will be committed)
+#   (use "git checkout -- <file>..." to discard changes in working directory)
+#
+#       \color{Red}{modified:   eecs470lab4slides.tex}
+#
+[jbbeau@dahak slides] [master *] $ git add eecs470lab4slides.tex
+[jbbeau@dahak slides] [master +] $ git status
+# On branch master
+# Changes to be committed:
+#   (use git reset HEAD <file>..." to unstage
+#
+#       \color{Green}{modified:   eecs470lab4slides.tex}
+#
+[jbbeau@dahak slides] [master +] $ git commit 
+[master f2ea0f5] Lab 4 diagram change
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+[jbbeau@dahak slides] [master] $ git push
+Counting objects: 11, done.
+Delta compression using up to 8 threads.
+Compressing objects: 100% (5/5), done.
+Writing objects: 100% (6/6), 475 bytes | 0 bytes/s, done.
+Total 6 (delta 3), reused 0 (delta 0)
+To git@bitbucket.org:eecs470staff/course_material.git
+   9a12490..f2ea0f5  master -> master
+[wcunning@mycroft-holmes course_material] [master] $ git pull
+   remote: Counting objects: 13, done.
+   remote: Compressing objects: 100% (7/7), done.
+   remote: Total 8 (delta 2), reused 0 (delta 0)
+   Unpacking objects: 100% (8/8), done.
+   From bitbucket.org:eecs470staff/course_material
+      9a12490..f2ea0f5  master     -> origin/master
+	  Already up-to-date.
+[wcunning@mycroft-holmes slides] [master *] $ git status
+# On branch master
+# Changes not staged for commit:
+#   (use "git add/rm <file>..." to update what will be committed)
+#   (use "git checkout -- <file>..." to discard changes in working directory)
+#
+#       \color{Red}{deleted:    beamerthemeLab.sty}
+#
+no changes added to commit (use "git add" and/or "git commit -a")
+[wcunning@mycroft-holmes slides] [master *] $ git reset --hard
+HEAD is now at f2ea0f5 Lab 4 diagram change
+[wcunning@mycroft-holmes slides] [master] $ git branch lab4
+[wcunning@mycroft-holmes slides] [master] $ git status
+On branch master
+Your branch is up-to-date with 'origin/master'.
+[wcunning@mycroft-holmes slides] [master] $ git checkout lab4
+Switched to branch 'lab4'
+[wcunning@mycroft-holmes slides] [lab4 *] $ git status
+# On branch lab4
+# Changes not staged for commit:
+#   (use "git add <file>..." to update what will be committed)
+#   (use "git checkout -- <file>..." to discard changes in working directory)
+#
+#       \color{Red}{modified:   eecs470lab4slides.tex}
+#
+[wcunning@mycroft-holmes slides] [lab4 *] $ git add eecs470lab4slides.tex
+[wcunning@mycroft-holmes slides] [lab4 +] $ git commit
+[lab4 b73416d] Better lab4slides skeleton/outline
+ 1 file changed, 137 insertions(+)
+[wcunning@dahak slides] [lab4] $ git push origin lab4
+Counting objects: 11, done.
+Delta compression using up to 8 threads.
+Compressing objects: 100% (5/5), done.
+Writing objects: 100% (6/6), 758 bytes | 0 bytes/s, done.
+Total 6 (delta 3), reused 0 (delta 0)
+To git@bitbucket.org:eecs470staff/course_material.git
+ * [new branch]      lab4 -> lab4
+[wcunning@mycroft-holmes slides] [lab4 *] $ git stash
+Saved working directory and index state WIP on lab4: 25cbbce Added .gitignore for LaTeX files, along
+with changes to the git slides and date updates to the assignment
+HEAD is now at 25cbbce Added .gitignore for LaTeX files, along with changes to the git slides
+[wcunning@mycroft-holmes slides] [lab4 $] $ git checkout master
+Switched to branch 'master'
+Your branch is up-to-date with 'origin/master'.
+[wcunning@mycroft-holmes slides] [master $] $ git merge lab4
+Updating f2ea0f5..25cbbce
+Fast-forward
+ .gitignore                                         |  68 \color{Green}{+++++++}
+ labs/lab4/assignment/tex/eecs470lab4assignment.tex |   2 \color{Green}{+}\color{Red}{-}
+ labs/lab4/slides/eecs470lab4slides.tex             | 613 \color{Green}{++++++++++++++++++++}
+ labs/lab4/slides/script.txt                        | 148 \color{Green}{++++++++++++++}
+ labs/lab4/slides/ssh-keygen.txt                    |  21 \color{Green}{++}
+ 5 files changed, 841 insertions(+), 11 deletions(-)
+ create mode 100644 .gitignore
+ create mode 100644 labs/lab4/slides/script.txt
+ create mode 100644 labs/lab4/slides/ssh-keygen.txt
+[wcunning@mycroft-holmes slides] [master $] $ git stash pop
+On branch master
+Your branch is ahead of 'origin/master' by 3 commits.
+  (use "git push" to publish your local commits)
+
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git checkout -- <file>..." to discard changes in working directory)
+
+        modified:   eecs470lab4slides.tex
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+
+        ../../lab2/slides/.eecs470lab2slides.tex.swx
+        ../assignment/source/
+        eecs470project3slides.tex
+        figs/
+        project3/
+        ../../../projects/
+
+no changes added to commit (use "git add" and/or "git commit -a")
+Dropped refs/stash@{0} (fe1617fa8d1fa972b942a76555a9c20340719712)
+
+[wcunning@mycroft-holmes w14] [master] $ git tag -a lab4-release HEAD
+[wcunning@mycroft-holmes w14] [master] $ git push origin lab4-release
+Counting objects: 1, done.
+Writing objects: 100% (1/1), 187 bytes | 0 bytes/s, done.
+Total 1 (delta 0), reused 0 (delta 0)
+To git@bitbucket.org:eecs470staff/course_material.git
+ * [new tag]         lab4-release -> lab4-release
+[wcunning@mycroft-holmes w14] [master] $ git tag -l
+lab4-release

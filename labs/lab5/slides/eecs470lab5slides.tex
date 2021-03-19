@@ -1,0 +1,832 @@
+%*******************************************************%
+%														%
+% William Cunningham									%
+% wcunning@umich.edu									%
+% EECS 470 -- Lab 5										%
+%														%
+%*******************************************************%
+
+%*******************************************************%
+% Preamble													%
+%*******************************************************%
+
+\documentclass[table,dvipsnames]{beamer}
+\usetheme{Lab}
+
+\usepackage{
+	siunitx,
+	tikz,
+	graphicx,
+	amsmath,
+	float,
+	minted,
+	hyperref,
+	textcomp,
+	upquote,
+	multirow,
+	fancyvrb
+}
+
+\usepackage[T1]{fontenc}
+%-----------------------%
+% TikZ					%
+%-----------------------%
+%--- CircuiTikZ Definitions ---%
+
+%--- TikZ Definitions ---%
+\usetikzlibrary{shapes,arrows,automata,shadows,decorations,fadings}
+\pgfdeclarelayer{background}
+\pgfdeclarelayer{foreground}
+\pgfsetlayers{background,main,foreground}
+\tikzstyle{master-blank} = 
+[	draw, 
+	rounded corners, 
+	rectangle,
+	color=ForestGreen!25,
+	minimum height=0.5cm, 
+	minimum width=1.30cm
+]
+\tikzstyle{master-commit} = 
+[	draw, 
+	fill=ForestGreen!50, 
+	rounded corners, 
+	rectangle,
+	minimum height=0.5cm, 
+	minimum width=1.30cm
+]
+\tikzstyle{branch-commit} = 
+[	draw, 
+	fill=RoyalBlue!70, 
+	rounded corners,
+	rectangle,
+	minimum height=0.5cm, 
+	minimum width=1.30cm
+]
+\tikzstyle{clean-repo} = 
+[	draw, 
+	inner color=RoyalBlue!40, 
+	outer color=RoyalBlue!50, 
+	color=black,
+	circle,
+	minimum height=2cm
+]
+\tikzstyle{changes-repo} = 
+[	draw, 
+	inner color=Red!40, 
+	outer color=Red!50, 
+	color=black,
+	circle,
+	minimum height=2cm
+]
+
+\definecolor{darkblue}{rgb}{0,0,0.8}
+
+\hypersetup{colorlinks=true,linkcolor=,urlcolor=red}
+
+\newcommand{\masterrepo}[2]{
+	\scriptsize{\color{Black}\texttt{#1}} \\
+	\scriptsize{\color{OliveGreen}\texttt{HEAD=#2}}
+}
+
+\newcommand{\branchrepo}[2]{
+	\scriptsize{\color{Black}\texttt{#1}} \\
+	\scriptsize{\color{NavyBlue}\texttt{HEAD=#2}}
+}
+
+\newcommand{\commit}[1]{
+	\scriptsize{\texttt{#1}}
+}
+
+%*******************************************************%
+% Document												%
+%*******************************************************%
+
+\title[Lab 5: Scripting]{EECS 470 Lab 5}
+\subtitle{Linux Shell Scripting}
+\institute[University of Michigan]{Department of Electrical Engineering and 
+			Computer Science \\
+			College of Engineering \\
+			University of Michigan}
+\date{Thursday, 3$^{\text{rd}}$ October, 2019}
+
+\begin{document}
+\frame{\titlepage}
+
+\begin{frame}{Overview}
+	\tableofcontents
+\end{frame}
+
+\section{Administrivia}
+\begin{frame}{Administrivia}
+	\begin{block}{Homework}
+		\begin{itemize}
+			\item Homework 3 is due Friday, 11$^{\text{st}}$ October at midnight
+		\end{itemize}
+	\end{block}
+	\begin{block}{Projects}
+		\begin{itemize}
+			\item Project 3 is due Monday, 7$^{\text{th}}$ October at midnight
+			\item If you haven't, you need to get started \emph{now}
+		\end{itemize}
+	\end{block}
+	\begin{block}{}
+		We are available to answer questions on anything here. Office hours can
+		be found in the
+		\href{https://www.eecs.umich.edu/courses/eecs470/?page=home.php}{course
+		website}.
+	\end{block}
+\end{frame}
+
+\section{UNIX}
+\begin{frame}{UNIX}
+	\begin{block}{What is UNIX?}
+		\begin{itemize}
+			\item Mainframe operating system
+			\item Written by Dennis Ritchie, Ken Thompson and Rob Pike (among
+				others) at Bell Labs
+			\item The basis for many modern operating systems, e.g. Linux, BSD,
+				Mac OSX
+		\end{itemize}
+	\end{block}
+	\begin{block}{History of UNIX}
+		\begin{itemize}
+			\item Written at Bell Labs in 1969
+			\item First version of BSD is installed in 1974
+			\item Last Bell Labs UNIX (Version 7) is published in 1979
+			\item The GNU Project is started by Richard Stallman
+			\item Linux Torvalds writes a monolithic kernel operating system in
+				1991
+		\end{itemize}
+	\end{block}
+\end{frame}
+
+\begin{frame}{UNIX Philosophy}
+	\begin{block}{}
+		``This is the Unix philosophy: Write programs that do one thing and do 
+		it well. Write programs to work together. Write programs to handle text
+		streams, because that is a universal interface.''
+
+		\hfill -- Douglas McIlroy
+	\end{block}
+	\begin{block}{}
+		``Everything is a file descriptor or a process.''
+
+		\hfill -- Linus Torvalds
+	\end{block}
+\end{frame}
+
+\subsection{Files}
+\begin{frame}{Files}
+	\begin{block}{What is a \emph{file}?}
+		\begin{itemize}
+			\item Anything referenced through a filesystem
+			\item Anything with a file descriptor
+		\end{itemize}
+	\end{block}
+\end{frame}
+
+\begin{frame}{Types of Files}
+	\begin{itemize}
+		\item Regular -- Anything not in one of the following categories
+		\item Directory -- Can contain other files and directories (read up on
+			inodes sometime)
+		\item Symbolic Link -- A pointer to another file
+		\item Pipe -- Covered in a few slides 
+		\item Socket -- Covered in EECS 482/489
+	\end{itemize}
+\end{frame}
+
+\begin{frame}{Permissions}
+	\centering
+	\begin{columns}
+		\begin{column}[T]{0.5\textwidth}
+		\begin{table}
+			{\tt
+			\begin{tabular}{|l|l|l|l|l|l|l|l|l|}
+				\hline
+				%--[ user  ]--%
+				\cellcolor{ForestGreen!25}r& 
+				\cellcolor{ForestGreen!25}w& 
+				\cellcolor{ForestGreen!25}x&
+				%--[ group ]--% 
+				\cellcolor{BlueGreen!25}-&
+				\cellcolor{BlueGreen!25}-&
+				\cellcolor{BlueGreen!25}-&
+				%--[ other ]--% 
+				\cellcolor{RoyalBlue!25}-&
+				\cellcolor{RoyalBlue!25}-&
+				\cellcolor{RoyalBlue!25}-\\ \hline
+				%--[ description ]--%
+				\multicolumn{3}{|c|}{\cellcolor{ForestGreen!25}User} & 
+				\multicolumn{3}{c|}{\cellcolor{BlueGreen!25}Group} & 
+				\multicolumn{3}{c|}{\cellcolor{RoyalBlue!25}Other} \\ \hline
+			\end{tabular}
+			}
+			\caption{UNIX permissions are represented with one bit for each
+				permission in each category, e.g. \texttt{700}.}
+		\end{table}
+		\end{column}
+	\end{columns}
+	\begin{columns}
+		\begin{column}[T]{0.3\textwidth}
+			\begin{block}{Three Permissions}
+				\begin{itemize}
+					\item Read 
+					\item Write 
+					\item Execute
+				\end{itemize}
+			\end{block}
+		\end{column}
+		\hspace*{-1cm}
+		%\begin{column}[T]{0.15\textwidth}
+			%\vspace*{6pt}
+			%for each of
+		%\end{column}
+		\hspace*{-1cm}
+		\begin{column}[T]{0.3\textwidth}
+			\begin{block}{Three Categories}
+				\begin{itemize}
+					\item User
+					\item Group 
+					\item Other
+				\end{itemize}
+			\end{block}
+		\end{column}
+	\end{columns}
+\end{frame}
+
+
+\subsection{Utilities}
+\begin{frame}{Utilities}
+	\begin{block}{What is a \emph{utility}?}
+		\begin{itemize}
+			\item A program used to process text streams/files
+			\item Called from some command line/shell
+		\end{itemize}
+	\end{block}
+	\begin{block}{Why do I care?}
+		\begin{itemize}
+			\item Utilities form the basis of ``Linux skills''
+			\item Useful for automation
+			\item Necessary for today's lab
+		\end{itemize}
+	\end{block}
+\end{frame}
+
+
+\begin{frame}{Navigation Utilities}
+	\begin{block}{\texttt{pwd}}
+		\begin{itemize}
+			\item Description: print working directory -- where you are
+			\item Synopsis: \texttt{pwd [OPTIONS]}
+		\end{itemize}
+	\end{block}
+	\begin{block}{\texttt{ls}}
+		\begin{itemize}
+			\item Description: list directory contents
+			\item Synopsis: \texttt{ls [OPTIONS]\dots~ [FILE] \dots}
+		\end{itemize}
+	\end{block}
+	\begin{block}{\texttt{cd}}
+		\begin{itemize}
+			\item Description: change directory
+			\item Synopsis: \texttt{cd [OPTIONS] [PATH]}
+		\end{itemize}
+	\end{block}
+\end{frame}
+
+\begin{frame}{File Utilities}
+	\begin{block}{\texttt{cp}}
+		\begin{itemize}
+			\item Description: copy files
+			\item Synopsis: \texttt{cp [OPTONS]\dots~ SOURCE DEST}
+		\end{itemize}
+	\end{block}
+	\begin{block}{\texttt{mv}}
+		\begin{itemize}
+			\item Description: move files
+			\item Synopsis: \texttt{mv [OPTONS]\dots~ SOURCE DEST}
+		\end{itemize}
+	\end{block}
+	\begin{block}{\texttt{rm}}
+		\begin{itemize}
+			\item Description: remove files
+			\item Synopsis: \texttt{rm [OPTONS]\dots~ FILE\dots}
+		\end{itemize}
+	\end{block}
+\end{frame}
+
+\begin{frame}{\texttt{diff}}
+	\begin{block}{Description}
+		\begin{itemize}
+			\item Shows the line-by-line differences between files
+			\item Good for checking if your output is correct
+		\end{itemize}
+	\end{block}
+	\begin{block}{Synopsys}
+		\begin{itemize}
+			\item \texttt{diff [OPTIONS] FILES}
+		\end{itemize}
+	\end{block}
+	\begin{block}{Examples}
+		\begin{itemize}
+			\item \texttt{diff -uy ../project3\_correct/writeback.out
+				writeback.out}
+			\item \texttt{vimdiff ../project3\_correct/writeback.out
+				writeback.out}
+		\end{itemize}
+	\end{block}
+\end{frame}
+
+\begin{frame}{Graphical Diff}
+	\begin{block}{Alternatives to \texttt{diff}}
+		Parsing output of \texttt{diff} is hard, so it might be useful to use 
+		some kind of ``graphical diff'' tool, like \texttt{vimdiff}, which opens
+		up two files side-by-side in Vim showing their differences. Try it and
+		you'll see how much easier to parse this.
+	\end{block}
+\end{frame}
+
+\begin{frame}{\texttt{grep}}
+	\begin{block}{Description}
+		\begin{itemize}
+			\item Print lines matching a pattern
+		\end{itemize}
+	\end{block}
+	\begin{block}{Synopsys}
+		\begin{itemize}
+			\item \texttt{grep [OPTIONS] PATTERN [FILE]}
+		\end{itemize}
+	\end{block}
+	\begin{block}{Examples}
+		\begin{itemize}
+			\item \texttt{grep '@@@' program.out}
+			\item \texttt{ps -axfuw | grep "\$USER" | grep "vcs"}
+		\end{itemize}
+	\end{block}
+\end{frame}
+
+\begin{frame}[fragile]{Regular Expressions}
+	\begin{itemize}
+		\item Really powerful/useful
+		\item Complicated, and beyond the scope of this presentation
+		\item Read up on them
+			\begin{itemize}
+				\item at
+					\href{http://en.wikipedia.org/wiki/Regular_expressions}{Wikipedia}
+				\item in the
+					\href{http://www.gnu.org/software/grep/manual/grep.html#Regular-Expressions}{\texttt{grep} manual}
+			\end{itemize}
+	\end{itemize}
+\end{frame}
+
+\begin{frame}[fragile]{\texttt{man}}
+	\begin{block}{Description}
+		\begin{itemize}
+			\item An interface to the on-line reference manuals (pager) 
+		\end{itemize}
+	\end{block}
+	\begin{block}{Synopsys}
+		\begin{itemize}
+			\item \texttt{man PAGE}
+		\end{itemize}
+	\end{block}
+	\begin{block}{Examples}
+		\begin{itemize}
+			\item \href{http://www.gnu.org/software/grep/manual/grep.html}{\texttt{man grep}}
+			\item
+				\href{http://www.gnu.org/software/diffutils/manual/diffutils.html}{\texttt{man
+				diff}}
+		\end{itemize}
+	\end{block}
+\end{frame}
+
+\begin{frame}{Pager}
+	\begin{block}{Definition}
+		\begin{itemize}
+			\item A program which allows browsing of large text files by
+				breaking them into screen-sized chunks. 
+		\end{itemize}
+	\end{block}
+	\begin{block}{Examples}
+		\begin{itemize}
+			\item \texttt{less}
+			\item \texttt{man}
+		\end{itemize}
+	\end{block}
+\end{frame}
+
+\begin{frame}{Other Utilities}
+	\begin{block}{These will be useful\dots}
+		\begin{columns}
+			\begin{column}[T]{0.45\textwidth}
+				\begin{itemize}
+					\item \texttt{cut}
+					\item \texttt{touch}
+					\item \texttt{tee}
+					\item \texttt{xargs}
+				\end{itemize}
+			\end{column}
+			\begin{column}[T]{0.45\textwidth}
+				\begin{itemize}
+					\item \texttt{tail}
+					\item \texttt{column}
+					\item \texttt{find}
+					\item \texttt{less}
+				\end{itemize}
+			\end{column}
+		\end{columns}
+	\end{block}
+	\begin{block}{These are harder, but even more useful\dots}
+		\begin{columns}
+			\begin{column}[T]{0.45\textwidth}
+				\begin{itemize}
+					\item \texttt{sed}
+					\item \texttt{awk}
+					\item \texttt{patch}
+					\item \texttt{vi(m)}
+				\end{itemize}
+			\end{column}
+			\begin{column}[T]{0.45\textwidth}
+				\begin{itemize}
+					\item \texttt{fmt}
+					\item \texttt{tmux} 
+					%\item 
+					%\item 
+				\end{itemize}
+			\end{column}
+		\end{columns}
+	\end{block}
+\end{frame}
+
+\subsection{Connecting Utilities}
+
+\begin{frame}{Program Features}
+	\begin{block}{Methods of Communication}
+		\begin{itemize}
+			\item Standard Text Streams
+				\begin{itemize}
+					\item \texttt{stdin} 
+					\item \texttt{stdout}
+					\item \texttt{stderr}
+				\end{itemize}
+			\item Return value/code
+		\end{itemize}
+	\end{block}
+\end{frame}
+
+\begin{frame}{Return Codes}
+	\begin{block}{What is a \emph{return code}?}
+		\begin{itemize}
+			\item The integer value a program returns (e.g. \texttt{return(0);})
+			\item Conventionally, returning zero indicates success, non-zero
+				failure
+			\item Specific values other than zero mean different things for
+				different programs
+		\end{itemize}
+	\end{block}
+\end{frame}
+
+\begin{frame}{Standard Text Streams}
+	\begin{block}{\texttt{stdin}}
+		\begin{itemize}
+			\item The default input to a program
+			\item From a keyboard by default
+		\end{itemize}
+	\end{block}
+	\begin{block}{\texttt{stdout}}
+		\begin{itemize}
+			\item The default output of a program
+			\item To a display by default
+		\end{itemize}
+	\end{block}
+	\begin{block}{\texttt{stderr}}
+		\begin{itemize}
+			\item The default error output of a program
+			\item To a display by default, requires additional effort to save
+		\end{itemize}
+	\end{block}
+\end{frame}
+
+
+\begin{frame}{Connecting Utilities}
+	\begin{block}{Why do we want to connect utilities?}
+		\begin{itemize}
+			\item Combination jobs without intermediate files
+			\item e.g. take the diff of two different grep operations (what you
+				need to do for today's lab)
+		\end{itemize}
+	\end{block}
+	\begin{block}{How can we connect utilities?}
+		\begin{itemize}
+			\item Pipes
+			\item Redirection
+		\end{itemize}
+	\end{block}
+\end{frame}
+
+\begin{frame}{Pipe}
+	\begin{block}{What is a \emph{pipe}?}
+		\begin{itemize}
+			\item Connects the \texttt{stdout} of one program to the
+				\texttt{stdin} of another
+			\item Does not connect \texttt{stderr}
+		\end{itemize}
+	\end{block}
+	\begin{block}{How do I use one?}
+		\begin{itemize}
+			\item Call a program on one side of the \texttt{|} and then call
+				another on the other side
+			\item e.g. \texttt{dmesg | less}
+		\end{itemize}
+	\end{block}
+\end{frame}
+
+\begin{frame}{Pipe: \texttt{xargs}}
+	\begin{block}{Problem}
+		What if we want to pipe to utility that uses arguments instead of input?
+	\end{block}
+	\begin{block}{Solution: \texttt{xargs}}
+		\href{http://en.wikipedia.org/wiki/Xargs}{\texttt{xargs}} splits input 
+		into individual items and calls the program that is its argument once 
+		for each input.
+	\end{block}
+\end{frame}
+
+\begin{frame}{Redirection}
+	\begin{block}{What is \emph{redirection}?}
+		\begin{itemize}
+			\item Allows for modification of the standard text streams
+				\begin{itemize}
+					\item \texttt{stdin} is \texttt{0}
+					\item \texttt{stdout} is \texttt{1}
+					\item \texttt{stderr} is \texttt{2}
+				\end{itemize}
+			\item Several types:
+				\begin{itemize}
+					\item[\texttt{0<}] Use a file instead of the keyboard for
+						\texttt{stdin}
+					\item[\texttt{i>}] Use a file instead of the terminal for
+						the stream \texttt{i}
+					\item[\texttt{i>{}>}] Like \texttt{i>}, but append to a file 
+						instead of overwriting
+					\item[\texttt{i>\&j}] Put stream \texttt{i} into the same
+						place as stream \texttt{j}
+				\end{itemize}
+		\end{itemize}
+	\end{block}
+	\href{http://www.tldp.org/LDP/abs/html/io-redirection.html}{Advanced Bash Scripting Guide: I/O Redirection}
+\end{frame}
+
+\begin{frame}{Redirection by Example}
+	\begin{block}{Example}
+		\begin{itemize}
+			\item \texttt{./vs-asm < test\_progs/evens.s > program.mem}
+		\end{itemize}
+	\end{block}
+	\begin{block}{Example}
+		\begin{itemize}
+			\item \texttt{make | tee 2>\&1 build.out}
+		\end{itemize}
+	\end{block}
+	\begin{block}{Example}
+		\begin{itemize}
+			\item \texttt{./test 1>\&2 2>\&3}
+		\end{itemize}
+	\end{block}
+\end{frame}
+
+\section{Bourne Again Shell}
+
+\begin{frame}{Shell}
+	\begin{block}{What is a \emph{shell}?}
+		\begin{itemize}
+			\item Before we had graphical environments, we had text shells
+			\item Basically, an interpreter for commands, executing programs
+				and saving information
+			\item Possibly a Read-Execute-Print-Loop (REPL)
+		\end{itemize}
+	\end{block}
+\end{frame}
+
+\begin{frame}{Bourne Again Shell}
+	\begin{block}{What is \emph{BASH}?}
+		\begin{itemize}
+			\item Stands for the Bourne Again Shell
+			\item Created in 1989 by Brian Fox
+			\item Default shell in most Linux distributions and Mac OSX
+		\end{itemize}
+	\end{block}
+	\begin{block}{Why BASH?}
+		\begin{itemize}
+			\item What I learned first
+			\item Default in CAEN Redhat, finally
+		\end{itemize}
+	\end{block}
+\end{frame}
+
+\begin{frame}{Warning}
+	\begin{block}{Warning}
+		Everything after this slide will be specific to BASH. Other shells
+		behave similarly, but not identically. If you want to use something
+		else (e.g. ZSH, TCSH, etc.), please find other resources.
+	\end{block}
+\end{frame}
+
+\subsection{Variables}
+
+\begin{frame}{Variables}
+	\begin{block}{BASH Variables}
+		\begin{itemize}
+			\item Store data
+			\item Contain text, for the most part
+			\item No type system
+		\end{itemize}
+	\end{block}
+	\begin{block}{Syntax}
+		\begin{itemize}
+			\item Assignment/Declaration
+				\begin{itemize}
+					\item \texttt{variable=value}
+				\end{itemize}
+			\item Referencing
+				\begin{itemize}
+					\item \texttt{\$variable}
+					\item \texttt{\$\{variable\}}
+				\end{itemize}
+		\end{itemize}
+	\end{block}
+\end{frame}
+
+\begin{frame}{Variable Scope}
+	\begin{block}{Scope}
+		\begin{itemize}
+			\item Variables exist inside the shell they're in
+			\item Unless exported \\
+				e.g. \texttt{export EDITOR=vim}
+			\item This is very important in scripts, particularly the shell
+				startup scripts (\texttt{.bashrc}, \texttt{.bash\_profile})
+		\end{itemize}
+	\end{block}
+\end{frame}
+
+\begin{frame}{Special Variables}
+	\begin{columns}
+		\begin{column}[T]{0.9\textwidth}
+			\begin{itemize}
+				\item[\texttt{\$\#}] The number of command line arguments
+				\item[\texttt{\$0}] The name of the script/function called
+				\item[\texttt{\$1}] The first argument to the script/function
+				\item[\texttt{\$?}] The return code of the last program run in this
+					shell
+				\item[\texttt{\$USER}] The current user
+				\item[\texttt{\$HOME}] The user's home directory
+			\end{itemize}
+		\end{column}
+	\end{columns}
+\end{frame}
+
+\subsection{Flow Control}
+
+\begin{frame}[fragile]{Flow Control}
+	\begin{block}{\texttt{if/else}}
+		\begin{minted}[fontsize=\scriptsize,frame=lines]{bash}
+			if [ var -eq "string" ]
+			then
+				command
+			elif [ var -eq "string2" ] 
+			then
+				command2
+			else
+				command3
+			fi
+		\end{minted}
+	\end{block}
+\end{frame}
+
+\begin{frame}[fragile]{Flow Control}
+	\begin{block}{case}
+		\begin{minted}[fontsize=\scriptsize,frame=lines]{bash}
+			case "$var" in
+				val)
+					command
+				;;
+				val2)
+					command
+				;;
+				( * )
+					default
+				;;
+			esac
+		\end{minted}
+	\end{block}
+\end{frame}
+
+\begin{frame}[fragile]{Flow Control}
+	\begin{block}{\texttt{for}}
+		\begin{minted}[fontsize=\scriptsize,frame=lines]{bash}
+			for file in ./*; do
+				command $file
+				command2
+			done
+		\end{minted}
+		\begin{minted}[fontsize=\scriptsize,frame=lines]{bash}
+			for (( a=1; a <= LIMIT; a++ )) do
+				command 
+				command2
+			done
+		\end{minted}
+	\end{block}
+\end{frame}
+
+\begin{frame}{Conditionals}
+	\begin{block}{Testing}
+		\begin{itemize}
+			\item Testing happens in \texttt{[ ]}
+			\item String tests are different than arithmetic tests
+			\item Generally use \texttt{-lt, -gt, -le, -ge, -eq, -ne}
+			\item Tests for files are special, e.g. \texttt{[ -x simv ]} makes
+				sure that the binary \texttt{simv} has execution permissions
+		\end{itemize}
+	\end{block}
+\end{frame}
+
+\subsection{Functions}
+
+\begin{frame}[fragile]{Functions}
+	\begin{block}{Functions}
+		\begin{itemize}
+			\item Packages of commands
+			\item Arguments are referenced by position
+			\item Useful for packaging up commonly reused bits
+		\end{itemize}
+	\end{block}
+	\begin{block}{Syntax}
+		\begin{minted}[fontsize=\scriptsize,frame=lines]{bash}
+			function () 
+			{
+			    commands
+			}
+		\end{minted}
+	\end{block}
+\end{frame}
+
+\subsection{Globbing}
+
+\begin{frame}{File Globbing}
+	\begin{block}{What is \emph{globbing}?}
+		\begin{itemize}
+			\item File name wildcarding in the shell
+			\item Expansion is done, and then passed to the command to be
+				executed
+			\item e.g. \texttt{test\_progs/*.s}
+		\end{itemize}
+	\end{block}
+	\begin{block}{What should I know globbing?}
+		\begin{itemize}
+			\item Superior to parsing \texttt{ls} output in everyway
+			\item Can get more complicated, see
+				\href{http://www.gnu.org/software/bash/manual/html_node/Pattern-Matching.html\#Pattern-Matching}{this
+				page} of the BASH manual.
+		\end{itemize}
+	\end{block}
+\end{frame}
+
+\section{Scripting}
+
+\begin{frame}{Scripting}
+	\begin{enumerate}
+		\item Write a series of shell commands into a text file
+		\item On the first line of the file, specify an interpreter \\
+			e.g. \texttt{\#!/bin/bash}
+		\item Name it something appropriate \\
+			e.g. \texttt{test.sh}
+		\item Add execute permissions \\
+			e.g. \texttt{chmod +x test.sh}
+		\item Run the script \\
+			e.g. \texttt{\$ ./test.sh}
+	\end{enumerate}
+\end{frame}
+
+\section{Assignment}
+\begin{frame}[fragile]{Lab Assignment}
+	\begin{itemize}
+		\item Assignment is posted to the course website as 
+			\href{http://www.eecs.umich.edu/eecs/courses/eecs470/labs/eecs470lab5assignment.pdf}{Lab
+			5 Assignment}.
+		\item If you get stuck\dots
+			\begin{itemize}
+				\item Ask a neighbor, quietly
+				\item Put yourself in the 
+					\href{https://oh.eecs.umich.edu/course_queues/403}{help queue}
+			\end{itemize}
+		\item When you finish the assignment, sign up in the
+			\href{https://oh.eecs.umich.edu/course_queues/403}{help queue}
+			and mark that you would like to be checked off.
+		\item If you are unable to finish today, the assignment needs to be
+			checked off by a GSI in office hours \emph{before} the next lab
+			session.
+	\end{itemize}
+\end{frame}
+
+\end{document}

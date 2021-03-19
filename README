@@ -1,0 +1,10 @@
+Open Computer Architecture Course
+
+We provided the source code and slides for labs and projects used in our class
+
+Currently you would need to replace the build commands in the Makefile in all the projects with your technology lib and simulator to properly compile and simulate
+
+Link to course website
+
+http://www.eecs.umich.edu/eecs/courses/eecs470/?page=home.php
+

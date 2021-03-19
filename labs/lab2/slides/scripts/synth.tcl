@@ -1,0 +1,1 @@
+../../../lab1/assignment/source/tut_synth.tcl

@@ -1,0 +1,3 @@
+target: dep1 dep2 ...
+	command1
+	command2

@@ -1,0 +1,221 @@
+%***********************************************%
+%												%
+% EECS 470 - Project 3							%
+%<------------------> 							%
+% Last Modified by:								%
+%	William Cunningham on 2014-9-22				%
+%												%
+%***********************************************%
+
+%***********************************************%
+% Preamble										%
+%***********************************************%
+
+\documentclass{article}
+
+\usepackage[dvipsnames]{xcolor}
+
+\usepackage{
+	tikz,
+	colortbl,
+	graphicx,
+	amsmath,
+	amssymb,
+	mathrsfs,
+	float,
+	siunitx,
+	fancyhdr,
+	hyperref,
+	minted,
+	cleveref,
+	algorithm,
+	algpseudocode
+}
+
+
+\usepackage
+	[left=1in,top=1in,right=1in,bottom=1in]
+	{geometry}
+
+\pagestyle{fancy}
+
+%--- Header ---%
+
+\newcommand{\courseNumber}{EECS 470}
+\newcommand{\courseTitle}{Computer Architecture}
+\newcommand{\university}{University of Michigan, Ann Arbor}
+\newcommand{\labdate}{January 28$^{\text{th}}$, 2019}
+
+
+\lhead{
+	\small{
+		\university
+	}
+}
+\rhead{
+	\small{
+		\emph{Date: \labdate} \hspace*{-1em}
+		% Why is the above \hspace necessary?
+	}
+}
+
+\newcommand{\shortbar}{
+	\vspace*{-12pt}
+	\begin{center}
+		\rule{5ex}{0.1pt}
+	\end{center}
+}
+\newcommand{\project}[1]{
+	\begin{center}
+		\LARGE{
+			\vspace*{-12pt}
+			EECS 470 Project \#3
+			\shortbar
+		}
+	\end{center}
+}
+
+
+%***********************************************%
+%                                               %
+% TikZ Definitions                              %
+%                                               %
+%***********************************************%
+
+\usetikzlibrary{shapes,arrows,automata,shadows}
+\pgfdeclarelayer{background}
+\pgfdeclarelayer{foreground}
+\pgfsetlayers{background,main,foreground}
+
+% Block Diagram Styles
+\tikzstyle{block} = [draw, fill=RoyalBlue!50, rectangle,
+        minimum height=2cm, minimum width=2cm, rounded corners]
+\tikzstyle{sum} = [draw, fill=blue!20, circle, node distance=2cm]
+\tikzstyle{input} = [coordinate]
+\tikzstyle{output} = [coordinate]
+\tikzstyle{branch} = [coordinate]
+\tikzstyle{pinstyle} = [pin edge={to-, thin, black}]
+
+% Signal Flow Graph Styles
+\tikzstyle{signal} = [draw, fill=RoyalBlue!50, circle,
+	minimum height=3em]
+\tikzstyle{state} = [draw, fill=RoyalBlue!50, circle,
+	minimum height=3em]
+
+%***********************************************%
+%                                               %
+% Document										%
+%                                               %
+%***********************************************%
+
+\begin{document}
+\vspace*{-20pt}
+\project{3}
+
+\begin{itemize}
+	\item This is an individual assignment. You may discuss the specification
+		and help one another with the (System)Verilog language. The
+		modifications you submit must be your own.
+	\item This assignment is worth 4\% of your course grade. 
+	\item Due at 11:59pm EDT on Sunday, 10$^{\text{th}}$ February, 2019. 
+		\emph{Late submissions are not accepted.}
+	\item \textbf{This assignment is considerably more work than programming assignments 1 and 2. \\Do not leave it until the last minute!}
+
+\end{itemize}
+\hrulefill
+
+\section{Introduction}
+\textsc{VeriSimpleV} is a simple pipelined implementation of a subset of the
+RISC-V instruction set architecture, written in synthesizable, behavioral
+SystemVerilog. The structure of this implementation is very similar to the MIPS
+pipeline covered in the text. We have provided you with a base version, which
+has absolutely no hazard detection logic. This version of \textsc{VeriSimpleV}
+inserts 4 invalid instructions (stalls) after every instruction to remove any
+possibility of a hazard.
+
+\section{Assignment}
+Your assignment will be to modify the provided implementation of
+\textsc{VeriSimpleV} to handle hazards and forwarding. You will need to begin by
+modifying the \texttt{if\_stage.sv} file to issue valid instructions so that more
+than one is in the pipeline at a time.
+
+Your solution is subject to the following restrictions:
+\begin{itemize}
+	\item Branches should resolve in the stage in which they are currently
+		resolved.
+	\item All forwarding must be to the \texttt{EX} stage, even if the data
+		isn't needed until a later stage.
+	\item Any stalling due to data hazards must occur in the \texttt{ID} stage,
+		meaning the dependent instruction should wait in the \texttt{ID} stage.
+		Obviously the instruction following the stalling instruction in the
+		\texttt{ID} stage will need wait in the \texttt{IF} stage. Thus, if you
+		need to insert an invalid instruction (a stall), it must appear in the
+		\texttt{EX} stage. 
+	\item If you wish to insert a \texttt{noop} you must also invalidate the
+		instruction. Otherwise your CPI numbers will be wrong.
+	\item If there is a structural hazard in the memory, you should let the
+		\texttt{load}/\texttt{store} go and have the \texttt{IF} stage wait for
+		the bus to be free.
+\end{itemize}
+
+You will need to add logic to handle all types of hazards: structural, control 
+and data. You will also need to add logic to forward data to avoid data hazards,
+where possible within the limitations above, and add stalls if and only if there
+is a data hazard that cannot be resolved by forwarding. You should predict
+branches as not taken and squash if incorrect. Verify that your improved
+pipeline produces the same results as our provided version.
+
+Your improved pipeline will be tested in synthesis as well as simulation, so you
+should test it that way as well. Your submission will be graded automatically by
+comparing the files output by the provided testbench, which include the
+contents of the pipeline, the contents of memory and the CPI.
+
+\subsection{Hints}
+\begin{itemize}
+	\item Be careful with forwarding and register 0.
+	\item Synthesized runs of the pipeline can take a few minutes, depending on
+		the testcase and computer.
+	\item There is a \emph{lot} of SystemVerilog here; take your time looking it
+		over. Try to understand how it works before you modify it. The slides
+		from Lab 4 will also help walk you through it.
+	\item Start this process early!
+\end{itemize}
+
+\section{Project Files}
+For this project, you are provided with most of the code and the entire build and test system. \textbf{The source files are available at \href{https://bitbucket.org/jieltan/project-v-open-beta/src/master/}{\underline{this repository}}}. Here is a quick introduction to what you've been provided and how it's structured.
+
+The VeriSimpleV pipeline is broken up into 7 files in the \texttt{project3/verilog/ }folder. There are 5 files which correspond to the pipeline stages (\texttt{project3/verilog/if\_stage.sv}, etc.); the register file module is separated into the \texttt{project3/verilog/regfile.sv} file and instantiated by the ID stage; and the stages are tied together by the pipeline module, which can be found in the project3/verilog/pipeline.v file.
+
+The \texttt{project3/sys\_defs.svh} file contains all of the \texttt{typedef's} and \texttt{`define's} that are used in the pipeline and testbench. The testbench and associated nonsynthesizable verilog can be found in the \texttt{project3/testbench/} folder. Note that the memory module defined in the \texttt{project3/testench/mem.sv} file is nonsyn- thesizable.
+
+Testing this project is less about the testbench and more about the testcases. Now that you've moved up to a complete processor design, testing requires running programs. You have been provided with a set of testcases in the \texttt{project3/test\_progs/} folder, written in RISC-V assembly or C language. To run one of them, you first have to assemble it into machine code, which is done using  \texttt{riscv64-unknown-elf-gcc}. The rules for compiling testcases in the Makefile are as follows:
+
+\hrulefill
+
+\texttt{SOURCE = test\_progs/sampler.s}
+
+\texttt{...}
+
+\texttt{GCC = riscv64-unknown-elf-gcc}
+
+\texttt{...}
+
+\texttt{program: compile disassemble hex}
+
+\texttt{~~~@:}
+
+\texttt{...}
+
+\texttt{assembly: assemble dissemble hex}
+
+\texttt{~~~@:}
+
+\hrulefill
+
+\texttt{make assembly} reads the code in from the \texttt{project3/test\_progs/sampler.s} file and writes the assembled machine code out to the \texttt{project3/program.mem} file, which is then read into memory by the testbench. To compile another test case, you need to override the \texttt{SOURCE} variable in the Makefile. To comile \texttt{project3/test\_progs/*.c} testcases, \texttt{make program} should be used. Finally, once you have an assembled program ready to test, you can run the VeriSimpleV the same way you've run every other project so far, with the make command. If you need to run a little more interactively, to see where a particular instruction is in the pipeline for instance, you have been provided with a visual debugger, which can be run using the \texttt{make vis\_simv} command. Play around with this. It will make the project much easier.
+
+\section{Submission}
+\textbf{You will submit this project the same way you've submitted the last two, using
+the submission script.} In addition, you will need to create a private repository on \href{http://bitbucket.org}{Bitbucket} with the name \texttt{eecs470\_f19\_project3\_\{uniquename\}}, and grant Admin access to the account \texttt{eecs470staff@umich.edu}. After you create the repo, you will need to check your code into the repository.
+
+\end{document}

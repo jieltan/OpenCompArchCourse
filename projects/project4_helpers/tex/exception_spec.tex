@@ -1,0 +1,161 @@
+%***********************************************%
+%												%
+% EECS 470 - RISC-V Privileged ISA Support  	%
+%<------------------> 							%
+% Last Modified by:								%
+%	Jielun Tan on 2019-10-21     				%
+%												%
+%***********************************************%
+
+%***********************************************%
+% Preamble										%
+%***********************************************%
+
+\documentclass{article}
+
+\usepackage{
+	tikz,
+	xcolor,
+	colortbl,
+	graphicx,
+	amsmath,
+	amssymb,
+	mathrsfs,
+	float,
+	siunitx,
+	fancyhdr,
+	minted,
+	url,
+	listings
+}
+\usepackage{hyperref}
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    filecolor=magenta,
+    urlcolor=cyan,
+}
+
+\usepackage{todonotes}
+\usepackage
+	[left=1in,top=1in,right=1in,bottom=1in]
+	{geometry}
+
+\pagestyle{fancy}
+\raggedright
+
+%--- Header ---%
+
+\newcommand{\courseNumber}{EECS 470}
+\newcommand{\courseTitle}{Computer Architecture}
+\newcommand{\university}{University of Michigan, Ann Arbor}
+
+
+
+\lhead{
+	\small{
+		\university
+	}
+}
+\rhead{
+	\small{
+		 Last updated by Jielun Tan, 10/2019 \hspace*{-1em}
+		% Why is the above \hspace necessary?
+	}
+}
+
+\newcommand{\shortbar}{
+	\vspace*{-12pt}
+	\begin{center}
+		\rule{5ex}{0.1pt}
+	\end{center}
+}
+\newcommand{\lab}[1]{
+	\begin{center}
+		\LARGE{
+			\vspace*{-12pt}
+			EECS 470 - RISC-V Privileged ISA Support
+			\shortbar
+		}
+	\end{center}
+}
+
+
+%***********************************************%
+%                                               %
+% TikZ Definitions                              %
+%                                               %
+%***********************************************%
+
+\usetikzlibrary{shapes,arrows}
+
+% Block Diagram Styles
+\tikzstyle{block} = [draw, fill=blue!20, rectangle,
+        minimum height=3em, minimum width=6em]
+\tikzstyle{sum} = [draw, fill=blue!20, circle, node distance=2cm]
+\tikzstyle{input} = [coordinate]
+\tikzstyle{output} = [coordinate]
+\tikzstyle{branch} = [coordinate]
+\tikzstyle{pinstyle} = [pin edge={to-, thin, black}]
+
+% Signal Flow Graph Styles
+\tikzstyle{signal} = [draw, fill=blue!20, circle,
+	minimum height=3em]
+\tikzstyle{state} = [draw, fill=blue!20, circle,
+	minimum height=3em]
+
+%***********************************************%
+%                                               %
+% Document										%
+%                                               %
+%***********************************************%
+
+\begin{document}
+\vspace*{-20pt}
+\lab{6}
+\vspace*{-20pt}
+
+\section*{Note:}
+\begin{itemize}
+	\item This is a draft and contents are subjected to change
+    % \todo[inline]{finish writing this, staff in the future}
+\end{itemize}
+
+\section{Introduction}
+Before reading this document, you should have already read the RISC-V Privileged ISA specifications, and if you haven't, you really should go read that first before to trying to understand anything here. We don't need to completely support all the features from the privileged ISA, as that would be an enormous amount of work with a lot of complexity, so this is the point that we go off-script and become only partially compliant to the spec. This is okay, since we control the software that's running on our design, we can guarantee certain behaviors. There are two main features in this project that requires privileged ISA support: exceptions and interrupts. You may choose to support either or both of them. For the rest of this document, we will refer supporting exceptions as \textbf{Exception Handling}, interrupts as \textbf{Interrupt Handling}, and both as \textbf{Trap Handling}. There are a couple additional features and instructions that needs to be implemented for these features. While we may not exactly measure your performance when the test program is trapping, you still want to optimize your datapath around it and report your time to context switch accordingly. In this case, a context switch consists from when a trap is taken to when the first instruction of the trap handler starts executing.
+\subsection{Zicsr Instructions}
+To support exceptions or interrupts, we need to support certain Control Status Registers (CSR). These set of registers control certain behaviors of the processors and their status affects the execution of certain instructions. The implementation provided in the "csr" branch of the starter code repository has a list of all the CSRs that we will use for the project and what their behaviors will be. Depending on what feature you are supporting, however, not all of them will be used. You do need to support all the CSR instructions, which handles the reading/writing of CSRs. There are a couple changes that we will make to the behaviors though:
+\begin{enumerate}
+    \item Since we don't need to support different privilege modes, and we are using machine mode only, you have RW permissions to all the CSRs that you support, and reading or writing them should not cause any side effects
+    \item The spec dictates that depending on the instruction, if your source/destination is the zero register, it should not read/write the register and will not cause any side effects. Since we don't have any side effects in the first place, you can choose to still read/write the register to make your implementation simpler
+    %\item If you are reading an unsupported CSR however, it should trigger an exception.
+\end{enumerate}
+For an OoO implementation, the CSR instructions can be quite tricky. You may reference to \hyperlink{https://docs.boom-core.org/en/latest/sections/execution-stages.html\#control-status-register-instructions}{BOOM} as an example, but keep in mind that BOOM also full fledgedly support the privileged ISA while we don't. Here are a couple things that you still need to be careful of:
+\begin{enumerate}
+    \item We highly recommend AGAINST renaming the CSRs. CSRs keep track of the status of the processor and updates themselves in case of certain events. Renaming them will require some of kind mapping check every time should anything other than a user specified CSR read/write modify the CSRs. For example, the \texttt{cycle} CSR is a counter of the number of cycles that increments every cycle. Do you really want to go through some kind of mapping check for that every cycle?
+    \item To guarantee the atomicity of CSR operations, you CANNOT execute CSR instructions \textbf{speculatively}! This means you may not dispatch a CSR instruction unless your ROB is empty, OR you can guarantee that no in-flight instructions will cause a roll-back and cause or be affected by a change in other CSRs. Subsequently, no instruction following the CSR instruction can dispatch until the CSR instruction has retired, because it may be affected by the status of CSR before the change, i.e. reading certain memory regions after disabling/enabling memory protections. This will make dependency handling easier, since any dependency would have been already resolved.
+\end{enumerate}
+
+\subsection{Trap-Return Instructions}
+You need to support MRET to return from a trap. However, since we don't need to support privileged levels, you don't need to check the privilege bits in \texttt{mstatus} and can choose whether or not to update the privilege bits. However, you do still need to re-enable the global interrupt enable bits in \texttt{mstatus}. MRET should be implemented regardless of the implementation of \texttt{mstatus}.
+
+
+\section{Exception Handling}
+The purpose of exception handling is to trap-and-emulate instructions and thereby achieve full support of RV32IM, minus the system call instructions, ECALL and EBREAK. Furthermore, illegal instructions should trigger an exception and the exception handler will exit the program accordingly. Instructions that involve divisions, namely DIV, DIVU, REM and REMU will cause an exception and they will be emulated in software instead. Refer to the "csr" branch to see an example of an implementation in hardware and the associated software emulation. The pipeline has been modified to support these operations. Note that C runtime setup has been modified slightly, mainly to allocate 1KB of space for the exception handler to use as its own stack own space and store contexts. There are workarounds for that, but right now this is the easier way and we can modify it in the future.
+You should also support the following machine mode CSRs.
+\begin{itemize}
+	\item \texttt{mepc}
+	\item \texttt{mtvec}
+	\item \texttt{mtval}\footnote{right now we are not supporting trapping on memory access errors, so \texttt{mtval} does not have to log the memory address that is causing the access error}
+	\item \texttt{mcause}
+	\item \texttt{mscratch}
+\end{itemize}
+
+Your implementation should produce the same outputs as the example implementation and you are expected to pass all programs provided along with the exception handler.
+
+% \section{Interrupt Handling}
+%  \todo[inline]{to be determined}
+
+% \section{Trap Handling}
+%  \todo[inline]{to be determined}
+\end{document}

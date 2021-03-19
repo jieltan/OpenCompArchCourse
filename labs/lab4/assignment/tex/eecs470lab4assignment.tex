@@ -1,0 +1,148 @@
+%***********************************************%
+%												%
+% EECS 470 - Lab 04								%
+%<------------------> 							%
+% Last Modified by:								%
+%	William Cunningham on 2014-9-22			%
+%												%
+%***********************************************%
+
+%***********************************************%
+% Preamble										%
+%***********************************************%
+
+\documentclass{article}
+
+\usepackage{
+	tikz,
+	xcolor,
+	colortbl,
+	graphicx,
+	amsmath,
+	amssymb,
+	mathrsfs,
+	float,
+	siunitx,
+	fancyhdr,
+	url,
+	listings,
+	cleveref
+}
+
+\usepackage
+	[left=1in,top=1in,right=1in,bottom=1in]
+	{geometry}
+
+\pagestyle{fancy}
+\raggedright
+
+%--- Header ---%
+
+\newcommand{\courseNumber}{EECS 470}
+\newcommand{\courseTitle}{Computer Architecture}
+\newcommand{\university}{University of Michigan, Ann Arbor}
+\newcommand{\labdate}{31$^{\text{st}}$ January, 2019}
+
+
+\lhead{
+	\small{
+		\university
+	}
+}
+\rhead{
+	\small{
+		\emph{Date: \labdate} \hspace*{-1em}
+		% Why is the above \hspace necessary?
+	}
+}
+
+\newcommand{\shortbar}{
+	\vspace*{-12pt}
+	\begin{center}
+		\rule{5ex}{0.1pt}
+	\end{center}
+}
+\newcommand{\lab}[1]{
+	\begin{center}
+		\LARGE{
+			\vspace*{-32pt}
+			EECS 470 Lab #1 Assignment
+			\shortbar
+			\vspace*{-20pt}
+		}
+	\end{center}
+}
+
+
+%***********************************************%
+%                                               %
+% TikZ Definitions                              %
+%                                               %
+%***********************************************%
+
+\usetikzlibrary{shapes,arrows}
+
+% Block Diagram Styles
+\tikzstyle{block} = [draw, fill=blue!20, rectangle,
+        minimum height=3em, minimum width=6em]
+\tikzstyle{sum} = [draw, fill=blue!20, circle, node distance=2cm]
+\tikzstyle{input} = [coordinate]
+\tikzstyle{output} = [coordinate]
+\tikzstyle{branch} = [coordinate]
+\tikzstyle{pinstyle} = [pin edge={to-, thin, black}]
+
+% Signal Flow Graph Styles
+\tikzstyle{signal} = [draw, fill=blue!20, circle,
+	minimum height=3em]
+\tikzstyle{state} = [draw, fill=blue!20, circle,
+	minimum height=3em]
+
+%***********************************************%
+%                                               %
+% Document										%
+%                                               %
+%***********************************************%
+
+\begin{document}
+\lab{4}
+
+\section*{Note:}
+\begin{itemize}
+	\item The lab should be completed individually.
+	\item The lab must be submitted by the end of Thursday office hours the
+		following week and checked off by a GSI.
+\end{itemize}
+
+\section{Introduction}
+You have been supplied with three, obfuscated, buggy ISR modules. These modules
+should implement the ISR functionality from Project 2 correctly, however they 
+are not quite right. The supplied ISRs are using a 4-cycle version of the 
+pipelined multiplier. The module has the regular definition: 
+
+\texttt{module ISR(reset, value, clock, result, done);}
+
+\section{Assignment}
+For this lab, you will need to write a testbench that will catch all the three
+buggy modules. Your testbench must use a task to check the solution of the ISR
+module (this is not that easy to do). See the testbenches from the previous labs
+if you do not remember how to write a task.
+
+In addition to catching the bugs, you must figure out what the source of each 
+bug is. This will require you to think critically. Since you do not have access 
+to the source of the module, you will have to look at its outputs and try to 
+theorize what could be causing the errors you are seeing. This is not easy, you 
+will have to think hard about how the ISR should work and how that compares to 
+what you are seeing.
+
+\emph{Hint:} The bugs in \texttt{buggy1} and \texttt{buggy3} are in the ISR 
+module. The bug in \texttt{buggy2} is in one of the submodules.
+
+
+\section{Submission}
+Unlike previous labs, we cannot autograde your lab. You will need to show it to
+one of the GSIs. In order to get your work checked off, you will need to type up 
+explanations of the bugs and show the file to a GSI. Once you think you have 
+identified and described the bugs, please add yourself to the help queue and 
+mark that you wish to be checked off.
+
+\end{document}

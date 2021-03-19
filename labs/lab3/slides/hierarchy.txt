@@ -1,0 +1,21 @@
+Design Hierarchy
+
+
+----------------
+SCORE  LINE   TOGGLE           
+ 80.50  97.27  63.72 testbench 
+  
+  ----------------
+  SCORE  LINE   TOGGLE    
+   81.22 100.00  62.44 m0 
+    
+    ----------------
+    SCORE  LINE   TOGGLE           
+     88.67 100.00  77.33 mstage[0] 
+     93.19 100.00  86.37 mstage[1] 
+     88.67 100.00  77.33 mstage[2] 
+     84.15 100.00  68.29 mstage[3] 
+     79.63 100.00  59.25 mstage[4] 
+     75.11 100.00  50.21 mstage[5] 
+     70.59 100.00  41.17 mstage[6] 
+     66.07 100.00  32.13 mstage[7] 

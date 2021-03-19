@@ -1,0 +1,202 @@
+# Begin_DVE_Session_Save_Info
+# DVE restart session
+# Saved on Fri Feb 21 04:24:59 2014
+# Designs open: 1
+#   Sim: /afs/umich.edu/user/j/b/jbbeau/470_material/labs/lab6/assignment/source/syn_simv
+# Toplevel windows open: 1
+# 	TopLevel.1
+#   Source.1: _vcs_unit__3931548980
+#   Wave.1: 411 signals
+#   Group count = 3
+#   Group testbench signal count = 11
+#   Group dut signal count = 9
+#   Group CAM signal count = 391
+# End_DVE_Session_Save_Info
+
+# DVE version: G-2012.09_Full64
+# DVE build date: Aug 24 2012 00:25:49
+
+
+#<Session mode="Restart" path=".restartSimSession.tcl" type="Debug">
+
+gui_set_loading_session_type Restart
+gui_continuetime_set
+gui_clear_window -type Wave
+gui_clear_window -type List
+
+# Application preferences
+gui_set_pref_value -key app_default_font -value {Helvetica,10,-1,5,50,0,0,0,0,0}
+gui_src_preferences -tabstop 8 -maxbits 24 -windownumber 1
+#<WindowLayout>
+
+# DVE Topleve session: 
+
+
+# Create and position top-level windows :TopLevel.1
+
+set TopLevel.1 TopLevel.1
+
+# Docked window settings
+set Console.1 Console.1
+gui_sync_global -id ${TopLevel.1} -option true
+
+# MDI window settings
+set HSPane.1 HSPane.1
+set Hier.1 Hier.1
+gui_update_layout -id ${HSPane.1} {{show_state maximized} {dock_state undocked} {dock_on_new_line false} {child_hier_colhier 1033} {child_hier_coltype 883} {child_hier_colpd 0} {child_hier_col1 0} {child_hier_col2 1} {child_hier_col3 -1}}
+set DLPane.1 DLPane.1
+set Data.1 Data.1
+gui_update_layout -id ${DLPane.1} {{show_state maximized} {dock_state undocked} {dock_on_new_line false} {child_data_colvariable 709} {child_data_colvalue 668} {child_data_coltype 538} {child_data_col1 0} {child_data_col2 1} {child_data_col3 2}}
+set Source.1 Source.1
+gui_update_layout -id ${Source.1} {{show_state maximized} {dock_state undocked} {dock_on_new_line false}}
+set Wave.1 Wave.1
+gui_update_layout -id ${Wave.1} {{show_state maximized} {dock_state undocked} {dock_on_new_line false} {child_wave_left 521} {child_wave_right 1393} {child_wave_colname 253} {child_wave_colvalue 264} {child_wave_col1 0} {child_wave_col2 1}}
+
+# End MDI window settings
+
+
+#</WindowLayout>
+
+#<Database>
+
+gui_set_precision 1s
+gui_set_time_units 1s
+#</Database>
+
+# DVE Global setting session: 
+
+
+# Global: Breakpoints
+
+# Global: Bus
+
+# Global: Expressions
+
+# Global: Signal Time Shift
+
+# Global: Signal Compare
+
+# Global: Signal Groups
+
+
+set _session_group_1 testbench
+gui_sg_create "$_session_group_1"
+set testbench "$_session_group_1"
+
+gui_sg_addsignal -group "$_session_group_1" { {testbench.unnamed$$_1} {testbench.unnamed$$_6.unnamed$$_8} {testbench.unnamed$$_9} testbench.write_idx testbench.clock testbench.reset testbench.enable testbench.data testbench.read_idx testbench.command testbench.hit }
+
+set _session_group_2 dut
+gui_sg_create "$_session_group_2"
+set dut "$_session_group_2"
+
+gui_sg_addsignal -group "$_session_group_2" { testbench.dut.write_idx testbench.dut.clock testbench.dut.reset testbench.dut.enable testbench.dut.data testbench.dut.SIZE testbench.dut.read_idx testbench.dut.command testbench.dut.hit }
+gui_set_radix -radix {decimal} -signals {Sim:testbench.dut.SIZE}
+gui_set_radix -radix {twosComplement} -signals {Sim:testbench.dut.SIZE}
+
+set _session_group_3 CAM
+gui_sg_create "$_session_group_3"
+set CAM "$_session_group_3"
+
+gui_sg_addsignal -group "$_session_group_3" { {testbench.dut.CAM.\content[4][2] } {testbench.dut.CAM.\content[7][31] } {testbench.dut.CAM.\content[2][28] } {testbench.dut.CAM.\content[7][12] } {testbench.dut.CAM.\content[0][5] } {testbench.dut.CAM.\content[7][1] } {testbench.dut.CAM.\content[1][29] } {testbench.dut.CAM.\content[2][20] } {testbench.dut.CAM.\content[6][13] } {testbench.dut.CAM.\content[3][4] } {testbench.dut.CAM.\content[1][21] } {testbench.dut.CAM.\content[5][14] } {testbench.dut.CAM.\content[6][3] } {testbench.dut.CAM.\content[0][22] } {testbench.dut.CAM.\content[4][15] } {testbench.dut.CAM.\content[7][28] } {testbench.dut.CAM.\content[2][6] } {testbench.dut.CAM.\content[3][16] } {testbench.dut.CAM.\content[6][29] } {testbench.dut.CAM.\content[7][20] } {testbench.dut.CAM.\content[2][17] } {testbench.dut.CAM.\content[5][5] } {testbench.dut.CAM.\content[6][21] } {testbench.dut.CAM.\content[1][18] } {testbench.dut.CAM.\content[1][8] } {testbench.dut.CAM.\content[5][22] } testbench.dut.CAM.data {testbench.dut.CAM.\content[0][19] } {testbench.dut.CAM.\content[1][10] } {testbench.dut.CAM.\content[0][30] } {testbench.dut.CAM.\content[4][7] } {testbench.dut.CAM.\content[1][0] } {testbench.dut.CAM.\content[4][23] } {testbench.dut.CAM.\content[0][11] } {testbench.dut.CAM.\content[3][24] } {testbench.dut.CAM.\content[7][17] } {testbench.dut.CAM.\content[7][6] } {testbench.dut.CAM.\content[2][25] } {testbench.dut.CAM.\content[6][18] } {testbench.dut.CAM.\content[3][9] } {testbench.dut.CAM.\content[0][2] } testbench.dut.CAM.enable {testbench.dut.CAM.\content[1][26] } {testbench.dut.CAM.\content[5][19] } {testbench.dut.CAM.\content[6][10] } {testbench.dut.CAM.\content[5][30] } {testbench.dut.CAM.\content[6][8] } {testbench.dut.CAM.\content[3][1] } {testbench.dut.CAM.\content[0][27] } {testbench.dut.CAM.\content[5][11] } {testbench.dut.CAM.\content[4][31] } {testbench.dut.CAM.\content[6][0] } {testbench.dut.CAM.\content[4][12] } {testbench.dut.CAM.\content[7][25] } {testbench.dut.CAM.\content[2][3] } {testbench.dut.CAM.\content[3][13] } {testbench.dut.CAM.\content[6][26] } {testbench.dut.CAM.\content[2][14] } {testbench.dut.CAM.\content[5][2] } {testbench.dut.CAM.\content[5][27] } testbench.dut.CAM.reset {testbench.dut.CAM.\content[1][15] } {testbench.dut.CAM.\content[1][5] } {testbench.dut.CAM.\content[4][28] } {testbench.dut.CAM.\content[0][16] } {testbench.dut.CAM.\content[3][29] } {testbench.dut.CAM.\content[4][4] } {testbench.dut.CAM.\content[4][20] } {testbench.dut.CAM.\content[3][21] } {testbench.dut.CAM.\content[7][14] } {testbench.dut.CAM.\content[0][7] } {testbench.dut.CAM.\content[7][3] } {testbench.dut.CAM.\content[2][22] } {testbench.dut.CAM.\content[6][15] } {testbench.dut.CAM.\content[3][6] } {testbench.dut.CAM.\content[1][23] } {testbench.dut.CAM.\content[5][16] } {testbench.dut.CAM.\content[6][5] } {testbench.dut.CAM.\content[0][24] } {testbench.dut.CAM.\content[4][17] } {testbench.dut.CAM.\content[2][8] } {testbench.dut.CAM.\content[3][18] } {testbench.dut.CAM.\content[7][22] } {testbench.dut.CAM.\content[2][19] } {testbench.dut.CAM.\content[5][7] } {testbench.dut.CAM.\content[2][0] } {testbench.dut.CAM.\content[3][10] } {testbench.dut.CAM.\content[2][30] } {testbench.dut.CAM.\content[6][23] } {testbench.dut.CAM.\content[2][11] } {testbench.dut.CAM.\content[1][31] } {testbench.dut.CAM.\content[5][24] } {testbench.dut.CAM.\content[1][12] } {testbench.dut.CAM.\content[4][9] } {testbench.dut.CAM.\content[1][2] } {testbench.dut.CAM.\content[4][25] } testbench.dut.CAM.hit {testbench.dut.CAM.\content[0][13] } {testbench.dut.CAM.\content[3][26] } {testbench.dut.CAM.\content[7][19] } {testbench.dut.CAM.\content[7][8] } {testbench.dut.CAM.\content[4][1] } {testbench.dut.CAM.\content[7][30] } {testbench.dut.CAM.\content[2][27] } {testbench.dut.CAM.\content[7][11] } {testbench.dut.CAM.\content[0][4] } {testbench.dut.CAM.\content[7][0] } {testbench.dut.CAM.\content[6][31] } {testbench.dut.CAM.\content[1][28] } {testbench.dut.CAM.\content[6][12] } {testbench.dut.CAM.\content[3][3] } }
+gui_sg_addsignal -group "$_session_group_3" { {testbench.dut.CAM.\content[0][29] } {testbench.dut.CAM.\content[1][20] } {testbench.dut.CAM.\content[5][13] } {testbench.dut.CAM.\content[6][2] } {testbench.dut.CAM.\content[0][21] } {testbench.dut.CAM.\content[4][14] } {testbench.dut.CAM.\content[7][27] } {testbench.dut.CAM.\content[2][5] } {testbench.dut.CAM.\content[3][15] } {testbench.dut.CAM.\content[6][28] } {testbench.dut.CAM.\content[2][16] } {testbench.dut.CAM.\content[5][4] } {testbench.dut.CAM.\content[5][29] } {testbench.dut.CAM.\content[6][20] } {testbench.dut.CAM.\content[1][17] } {testbench.dut.CAM.\content[1][7] } testbench.dut.CAM.n100 testbench.dut.CAM.N101 testbench.dut.CAM.n101 testbench.dut.CAM.n102 testbench.dut.CAM.n103 testbench.dut.CAM.n104 testbench.dut.CAM.n105 testbench.dut.CAM.n106 {testbench.dut.CAM.\content[5][21] } testbench.dut.CAM.n107 testbench.dut.CAM.n108 testbench.dut.CAM.n109 {testbench.dut.CAM.\content[0][18] } {testbench.dut.CAM.\content[4][6] } {testbench.dut.CAM.\content[4][22] } testbench.dut.CAM.n110 testbench.dut.CAM.n111 testbench.dut.CAM.n112 testbench.dut.CAM.n113 testbench.dut.CAM.n114 testbench.dut.CAM.n115 testbench.dut.CAM.n116 testbench.dut.CAM.n117 testbench.dut.CAM.n118 {testbench.dut.CAM.\content[0][10] } testbench.dut.CAM.n119 {testbench.dut.CAM.\content[3][23] } {testbench.dut.CAM.\content[7][16] } {testbench.dut.CAM.\content[0][9] } {testbench.dut.CAM.\content[7][5] } testbench.dut.CAM.n120 testbench.dut.CAM.n121 testbench.dut.CAM.n122 testbench.dut.CAM.n123 testbench.dut.CAM.n124 {testbench.dut.CAM.\content[2][24] } testbench.dut.CAM.n125 testbench.dut.CAM.n126 {testbench.dut.CAM.\content[6][17] } testbench.dut.CAM.n127 testbench.dut.CAM.n128 testbench.dut.CAM.n129 {testbench.dut.CAM.\content[3][8] } {testbench.dut.CAM.\content[0][1] } {testbench.dut.CAM.\content[1][25] } {testbench.dut.CAM.\content[5][18] } testbench.dut.CAM.n130 testbench.dut.CAM.n131 testbench.dut.CAM.n132 testbench.dut.CAM.n133 testbench.dut.CAM.n134 testbench.dut.CAM.n135 testbench.dut.CAM.n136 testbench.dut.CAM.n137 testbench.dut.CAM.n138 {testbench.dut.CAM.\content[6][7] } testbench.dut.CAM.n139 {testbench.dut.CAM.\content[3][0] } {testbench.dut.CAM.\content[0][26] } {testbench.dut.CAM.\content[4][19] } {testbench.dut.CAM.\content[5][10] } {testbench.dut.CAM.\content[4][30] } testbench.dut.CAM.n140 testbench.dut.CAM.n141 testbench.dut.CAM.n142 testbench.dut.CAM.n143 testbench.dut.CAM.n144 testbench.dut.CAM.n145 testbench.dut.CAM.n146 testbench.dut.CAM.n147 testbench.dut.CAM.n148 testbench.dut.CAM.n149 {testbench.dut.CAM.\content[4][11] } {testbench.dut.CAM.\content[3][31] } {testbench.dut.CAM.\content[7][24] } {testbench.dut.CAM.\content[5][9] } {testbench.dut.CAM.\content[2][2] } testbench.dut.CAM.n150 {testbench.dut.CAM.\content[3][12] } testbench.dut.CAM.n151 testbench.dut.CAM.n152 testbench.dut.CAM.n153 testbench.dut.CAM.n154 testbench.dut.CAM.n155 testbench.dut.CAM.n156 testbench.dut.CAM.n157 testbench.dut.CAM.n158 {testbench.dut.CAM.\content[6][25] } testbench.dut.CAM.n159 {testbench.dut.CAM.\content[2][13] } {testbench.dut.CAM.\content[5][1] } {testbench.dut.CAM.\content[5][26] } testbench.dut.CAM.n160 testbench.dut.CAM.n161 testbench.dut.CAM.n162 testbench.dut.CAM.n163 testbench.dut.CAM.n164 testbench.dut.CAM.n165 testbench.dut.CAM.n166 testbench.dut.CAM.n167 testbench.dut.CAM.n168 {testbench.dut.CAM.\content[1][14] } testbench.dut.CAM.n169 {testbench.dut.CAM.\content[1][4] } {testbench.dut.CAM.\content[4][27] } {testbench.dut.CAM.\content[0][15] } testbench.dut.CAM.n170 testbench.dut.CAM.n171 testbench.dut.CAM.n172 testbench.dut.CAM.n173 testbench.dut.CAM.n174 testbench.dut.CAM.n175 {testbench.dut.CAM.\content[3][28] } testbench.dut.CAM.n176 testbench.dut.CAM.n177 testbench.dut.CAM.n178 testbench.dut.CAM.n179 {testbench.dut.CAM.\content[4][3] } {testbench.dut.CAM.\content[2][29] } testbench.dut.CAM.n180 testbench.dut.CAM.n181 {testbench.dut.CAM.\content[3][20] } testbench.dut.CAM.n182 testbench.dut.CAM.n183 {testbench.dut.CAM.\content[7][13] } testbench.dut.CAM.write_idx }
+gui_sg_addsignal -group "$_session_group_3" { {testbench.dut.CAM.\content[0][6] } {testbench.dut.CAM.\content[7][2] } {testbench.dut.CAM.\content[2][21] } {testbench.dut.CAM.\content[6][14] } {testbench.dut.CAM.\content[3][5] } {testbench.dut.CAM.\content[1][22] } {testbench.dut.CAM.\content[5][15] } {testbench.dut.CAM.\content[6][4] } {testbench.dut.CAM.\content[0][23] } {testbench.dut.CAM.\content[4][16] } testbench.dut.CAM.n53 {testbench.dut.CAM.\content[7][29] } {testbench.dut.CAM.\content[2][7] } {testbench.dut.CAM.\content[3][17] } testbench.dut.CAM.N64 {testbench.dut.CAM.\content[7][21] } testbench.dut.CAM.N66 testbench.dut.CAM.n67 testbench.dut.CAM.n68 testbench.dut.CAM.n69 {testbench.dut.CAM.\content[2][18] } {testbench.dut.CAM.\content[5][6] } {testbench.dut.CAM.\content[6][22] } {testbench.dut.CAM.\content[1][19] } testbench.dut.CAM.N70 testbench.dut.CAM.n70 testbench.dut.CAM.n71 testbench.dut.CAM.n72 testbench.dut.CAM.n73 testbench.dut.CAM.n74 testbench.dut.CAM.N75 testbench.dut.CAM.n75 {testbench.dut.CAM.\content[2][10] } testbench.dut.CAM.n76 {testbench.dut.CAM.\content[1][9] } testbench.dut.CAM.n77 testbench.dut.CAM.n78 testbench.dut.CAM.n79 testbench.dut.CAM.command {testbench.dut.CAM.\content[1][30] } {testbench.dut.CAM.\content[5][23] } {testbench.dut.CAM.\content[1][11] } testbench.dut.CAM.n80 testbench.dut.CAM.N81 testbench.dut.CAM.n81 {testbench.dut.CAM.\content[4][8] } testbench.dut.CAM.n82 {testbench.dut.CAM.\content[0][31] } {testbench.dut.CAM.\content[4][24] } testbench.dut.CAM.n83 {testbench.dut.CAM.\content[1][1] } testbench.dut.CAM.n84 testbench.dut.CAM.n85 testbench.dut.CAM.n86 testbench.dut.CAM.N87 testbench.dut.CAM.n87 testbench.dut.CAM.n88 testbench.dut.CAM.n89 {testbench.dut.CAM.\content[0][12] } {testbench.dut.CAM.\content[3][25] } {testbench.dut.CAM.\content[7][18] } {testbench.dut.CAM.\content[7][7] } {testbench.dut.CAM.\content[4][0] } testbench.dut.CAM.n90 testbench.dut.CAM.n91 testbench.dut.CAM.n92 testbench.dut.CAM.n93 testbench.dut.CAM.N94 testbench.dut.CAM.n94 testbench.dut.CAM.n95 testbench.dut.CAM.n96 testbench.dut.CAM.n97 testbench.dut.CAM.n98 testbench.dut.CAM.n99 {testbench.dut.CAM.\content[2][26] } {testbench.dut.CAM.\content[6][19] } {testbench.dut.CAM.\content[7][10] } {testbench.dut.CAM.\content[0][3] } {testbench.dut.CAM.\content[6][30] } {testbench.dut.CAM.\content[1][27] } {testbench.dut.CAM.\content[6][11] } {testbench.dut.CAM.\content[6][9] } {testbench.dut.CAM.\content[5][31] } {testbench.dut.CAM.\content[3][2] } {testbench.dut.CAM.\content[0][28] } testbench.dut.CAM.valid {testbench.dut.CAM.\content[5][12] } {testbench.dut.CAM.\content[6][1] } {testbench.dut.CAM.\content[0][20] } {testbench.dut.CAM.\content[4][13] } {testbench.dut.CAM.\content[7][26] } testbench.dut.CAM.read_idx {testbench.dut.CAM.\content[2][4] } {testbench.dut.CAM.\content[3][14] } {testbench.dut.CAM.\content[6][27] } {testbench.dut.CAM.\content[2][15] } {testbench.dut.CAM.\content[5][3] } {testbench.dut.CAM.\content[5][28] } {testbench.dut.CAM.\content[1][16] } {testbench.dut.CAM.\content[1][6] } {testbench.dut.CAM.\content[4][29] } {testbench.dut.CAM.\content[5][20] } {testbench.dut.CAM.\content[0][17] } {testbench.dut.CAM.\content[4][5] } {testbench.dut.CAM.\content[4][21] } {testbench.dut.CAM.\content[3][22] } {testbench.dut.CAM.\content[7][15] } {testbench.dut.CAM.\content[0][8] } {testbench.dut.CAM.\content[7][4] } {testbench.dut.CAM.\content[2][23] } {testbench.dut.CAM.\content[6][16] } {testbench.dut.CAM.\content[3][7] } {testbench.dut.CAM.\content[0][0] } {testbench.dut.CAM.\content[1][24] } {testbench.dut.CAM.\content[5][17] } {testbench.dut.CAM.\content[6][6] } {testbench.dut.CAM.\content[0][25] } {testbench.dut.CAM.\content[4][18] } {testbench.dut.CAM.\content[2][9] } {testbench.dut.CAM.\content[3][19] } {testbench.dut.CAM.\content[4][10] } {testbench.dut.CAM.\content[3][30] } {testbench.dut.CAM.\content[7][23] } {testbench.dut.CAM.\content[5][8] } {testbench.dut.CAM.\content[2][1] } {testbench.dut.CAM.\content[3][11] } {testbench.dut.CAM.\content[2][31] } }
+gui_sg_addsignal -group "$_session_group_3" { {testbench.dut.CAM.\content[6][24] } {testbench.dut.CAM.\content[2][12] } {testbench.dut.CAM.\content[5][0] } {testbench.dut.CAM.\content[5][25] } {testbench.dut.CAM.\content[1][13] } {testbench.dut.CAM.\content[4][26] } {testbench.dut.CAM.\content[1][3] } testbench.dut.CAM.clock {testbench.dut.CAM.\content[0][14] } {testbench.dut.CAM.\content[3][27] } {testbench.dut.CAM.\content[7][9] } }
+
+# Global: Highlighting
+
+# Global: Stack
+gui_change_stack_mode -mode list
+
+# Post database loading setting...
+
+# Restore C1 time
+gui_set_time -C1_only 120
+
+
+
+# Save global setting...
+
+# Wave/List view global setting
+gui_list_create_group_when_add -wave -enable
+gui_cov_show_value -switch false
+
+# Close all empty TopLevel windows
+foreach __top [gui_ekki_get_window_ids -type TopLevel] {
+    if { [llength [gui_ekki_get_window_ids -parent $__top]] == 0} {
+        gui_close_window -window $__top
+    }
+}
+gui_set_loading_session_type noSession
+# DVE View/pane content session: 
+
+
+# Hier 'Hier.1'
+gui_show_window -window ${Hier.1}
+gui_list_set_filter -id ${Hier.1} -list { {Package 1} {All 0} {Process 1} {UnnamedProcess 1} {Function 1} {Block 1} {OVA Unit 1} {LeafScCell 1} {LeafVlgCell 1} {Interface 1} {PowSwitch 0} {LeafVhdCell 1} {$unit 1} {NamedBlock 1} {Task 1} {VlgPackage 1} {IsoCell 0} {ClassDef 1} }
+gui_list_set_filter -id ${Hier.1} -text {*}
+gui_change_design -id ${Hier.1} -design Sim
+catch {gui_list_expand -id ${Hier.1} testbench}
+catch {gui_list_expand -id ${Hier.1} testbench.dut}
+catch {gui_list_select -id ${Hier.1} {testbench.dut.CAM}}
+gui_view_scroll -id ${Hier.1} -vertical -set 4948
+gui_view_scroll -id ${Hier.1} -horizontal -set 0
+
+# Data 'Data.1'
+gui_list_set_filter -id ${Data.1} -list { {Buffer 1} {Input 1} {Others 1} {Linkage 1} {Output 1} {LowPower 1} {Parameter 1} {All 1} {Aggregate 1} {Event 1} {Assertion 1} {Constant 1} {Interface 1} {Signal 1} {$unit 1} {Inout 1} {Variable 1} }
+gui_list_set_filter -id ${Data.1} -text {*}
+gui_list_show_data -id ${Data.1} {testbench.dut.CAM}
+gui_view_scroll -id ${Data.1} -vertical -set 0
+gui_view_scroll -id ${Data.1} -horizontal -set 0
+gui_view_scroll -id ${Hier.1} -vertical -set 4948
+gui_view_scroll -id ${Hier.1} -horizontal -set 0
+
+# Source 'Source.1'
+gui_src_value_annotate -id ${Source.1} -switch false
+gui_set_env TOGGLE::VALUEANNOTATE 0
+gui_open_source -id ${Source.1}  -replace -active _vcs_unit__3931548980 /afs/umich.edu/user/j/b/jbbeau/470_material/labs/lab6/assignment/source/sys_defs.vh
+gui_src_value_annotate -id ${Source.1} -switch true
+gui_set_env TOGGLE::VALUEANNOTATE 1
+gui_view_scroll -id ${Source.1} -vertical -set 0
+gui_src_set_reusable -id ${Source.1}
+
+# View 'Wave.1'
+gui_wv_sync -id ${Wave.1} -switch false
+set groupExD [gui_get_pref_value -category Wave -key exclusiveSG]
+gui_set_pref_value -category Wave -key exclusiveSG -value {false}
+set origWaveHeight [gui_get_pref_value -category Wave -key waveRowHeight]
+gui_list_set_height -id Wave -height 25
+set origGroupCreationState [gui_list_create_group_when_add -wave]
+gui_list_create_group_when_add -wave -disable
+gui_wv_zoom_timerange -id ${Wave.1} 0 19
+gui_list_add_group -id ${Wave.1} -after {New Group} {testbench}
+gui_list_add_group -id ${Wave.1} -after {New Group} {dut}
+gui_list_add_group -id ${Wave.1} -after {New Group} {CAM}
+gui_list_select -id ${Wave.1} {testbench.data }
+gui_seek_criteria -id ${Wave.1} {Any Edge}
+
+
+
+gui_set_env TOGGLE::DEFAULT_WAVE_WINDOW ${Wave.1}
+gui_set_pref_value -category Wave -key exclusiveSG -value $groupExD
+gui_list_set_height -id Wave -height $origWaveHeight
+if {$origGroupCreationState} {
+	gui_list_create_group_when_add -wave -enable
+}
+if { $groupExD } {
+ gui_msg_report -code DVWW028
+}
+gui_list_set_filter -id ${Wave.1} -list { {Buffer 1} {Input 1} {Others 1} {Linkage 1} {Output 1} {Parameter 1} {All 1} {Aggregate 1} {Event 1} {Assertion 1} {Constant 1} {Interface 1} {Signal 1} {$unit 1} {Inout 1} {Variable 1} }
+gui_list_set_filter -id ${Wave.1} -text {*}
+gui_list_set_insertion_bar  -id ${Wave.1} -group CAM  -position in
+
+gui_marker_move -id ${Wave.1} {C1} 120
+gui_view_scroll -id ${Wave.1} -vertical -set 375
+gui_show_grid -id ${Wave.1} -enable false
+# Restore toplevel window zorder
+# The toplevel window could be closed if it has no view/pane
+if {[gui_exist_window -window ${TopLevel.1}]} {
+	gui_set_active_window -window ${TopLevel.1}
+	gui_set_active_window -window ${Wave.1}
+}
+#</Session>
+
