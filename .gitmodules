@@ -1,0 +1,3 @@
+[submodule "projects/project-v-open"]
+	path = projects/project-v-open
+	url = git@github.com:jieltan/project-v-open.git
